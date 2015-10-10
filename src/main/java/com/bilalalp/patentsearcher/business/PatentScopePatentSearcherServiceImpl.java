@@ -19,10 +19,10 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
     public List<PatentInfo> getPatentInfoList(String searchUrl) throws IOException {
 
         final List<PatentInfo> patentLinks = getPatentLinks(searchUrl);
-        return getPatentContens(patentLinks);
+        return getPatentContents(patentLinks);
     }
 
-    private List<PatentInfo> getPatentContens(final List<PatentInfo> patentInfos) throws IOException {
+    private List<PatentInfo> getPatentContents(final List<PatentInfo> patentInfos) throws IOException {
 
         for (final PatentInfo patentInfo : patentInfos) {
 
