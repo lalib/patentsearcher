@@ -16,8 +16,12 @@ public class StartUp {
 //        final List<PatentInfo> patentInfoList = usptoPatentSearcherServiceImpl.getPatentInfoList(PatentSearcherConstant.USPTO_URL);
 //        System.out.println(patentInfoList);
 
+        final long startTime = System.currentTimeMillis();
         final PatentSearcherService patentScopePatentSearcherService = new PatentScopePatentSearcherServiceImpl();
         final List<PatentInfo> patentInfoList = patentScopePatentSearcherService.getPatentInfoList(PatentSearcherConstant.PATENT_SCOPE_URL);
+        final long endTime = System.currentTimeMillis();
+
+        System.out.println("Total Time : " + (endTime - startTime) / 1000);
         System.out.println(patentInfoList.size());
     }
 }

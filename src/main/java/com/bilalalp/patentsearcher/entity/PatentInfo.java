@@ -15,4 +15,8 @@ public class PatentInfo {
 
     private String abstractContent;
 
+    private SiteInfo siteInfo;
+
+    private SearchInfo searchInfo;
+
 }

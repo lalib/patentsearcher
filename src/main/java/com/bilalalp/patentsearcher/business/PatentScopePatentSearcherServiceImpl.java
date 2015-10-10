@@ -18,8 +18,8 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
     @Override
     public List<PatentInfo> getPatentInfoList(String searchUrl) throws IOException {
 
-        final List<PatentInfo> patentLinks = getPatentLinks(searchUrl);
-        return getPatentContents(patentLinks);
+        return getPatentLinks(searchUrl);
+//        return getPatentContents(patentLinks);
     }
 
     private List<PatentInfo> getPatentContents(final List<PatentInfo> patentInfos) throws IOException {
@@ -33,6 +33,8 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
             if (body != null) {
                 final String abstractContent = getAbstractContent(body);
 
+                patentInfo.setAbstractContent(abstractContent);
+
             }
         }
 
@@ -41,7 +43,42 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
 
     private String getAbstractContent(final Element body) {
 
+        final Elements aClass = getaClass(body);
 
+        if (aClass != null && aClass.size() != 0) {
+
+            final Element spanElement = getSpanElement(aClass);
+            if (spanElement != null) {
+                return spanElement.text();
+            }
+        }
+
+        return null;
+    }
+
+    private Elements getaClass(Element body) {
+        final Elements aClass = body.getElementsByAttributeValue("class", "trans-section NPabstract");
+
+        if (aClass != null && !aClass.isEmpty()) {
+            return aClass;
+        }
+
+        final Elements aClass1 = body.getElementsByAttributeValue("class", "PCTabstract trans-section");
+
+        if (aClass1 != null && !aClass1.isEmpty()) {
+            return aClass1;
+        }
+
+        return aClass;
+    }
+
+    private Element getSpanElement(Elements spanElements) {
+
+        for (Element element : spanElements) {
+            if (element.attr("lang", "en") != null) {
+                return element;
+            }
+        }
         return null;
     }
 
@@ -69,7 +106,7 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
 
 
     private List<PatentInfo> getPatentLinks(String searchUrl) {
-        int pageNumber = 1;
+        int pageNumber = 0;
         final List<PatentInfo> patentInfoList = new ArrayList<>();
 
         boolean eof = false;
@@ -80,13 +117,13 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
 
             try {
 
-                final Document document = Jsoup.connect(searchUrl + pageNumber).timeout(PatentSearcherConstant.TIMEOUT).get();
                 pageNumber++;
+                final Document document = Jsoup.connect(searchUrl + pageNumber).timeout(PatentSearcherConstant.TIMEOUT).get();
                 final Element body = document.body();
 
                 final Integer pageCount = getPageCount(body);
 
-                if (pageCount <= patentInfoList.size() + 10) {
+                if (pageCount <= pageNumber * 10) {
                     eof = true;
                 }
 
@@ -101,6 +138,7 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
                     }
 
                     final Elements trElements = table.getElementsByTag("tr");
+
 
                     for (final Element element : trElements) {
 
