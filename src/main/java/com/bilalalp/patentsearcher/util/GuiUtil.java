@@ -2,6 +2,7 @@ package com.bilalalp.patentsearcher.util;
 
 import com.bilalalp.patentsearcher.gui.KeywordInfoGui;
 import com.bilalalp.patentsearcher.gui.SiteInfoGui;
+import com.bilalalp.patentsearcher.gui.StopWordInfoGui;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.scene.control.Menu;
@@ -48,7 +49,16 @@ public final class GuiUtil {
             }
         });
 
-        operationMenu.getItems().addAll(keywordInfoMenuItem, siteInfoMenuItem);
+        MenuItem stopWordInfoMenuItem = new MenuItem("StopWord Operations");
+        stopWordInfoMenuItem.setOnAction(actionEvent -> {
+            try {
+                new StopWordInfoGui().start(new Stage());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        operationMenu.getItems().addAll(keywordInfoMenuItem, siteInfoMenuItem, stopWordInfoMenuItem);
 
         menuBar.getMenus().addAll(fileMenu, operationMenu);
         return menuBar;

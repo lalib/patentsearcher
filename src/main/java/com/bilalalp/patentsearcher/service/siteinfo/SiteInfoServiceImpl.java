@@ -1,6 +1,6 @@
 package com.bilalalp.patentsearcher.service.siteinfo;
 
-import com.bilalalp.patentsearcher.dao.base.siteinfo.SiteInfoDao;
+import com.bilalalp.patentsearcher.dao.siteinfo.SiteInfoDao;
 import com.bilalalp.patentsearcher.entity.SiteInfo;
 import com.bilalalp.patentsearcher.service.base.AbstractService;
 import lombok.Getter;

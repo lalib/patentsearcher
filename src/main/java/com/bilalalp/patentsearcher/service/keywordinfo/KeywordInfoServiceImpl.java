@@ -1,4 +1,4 @@
-package com.bilalalp.patentsearcher.service.keyword;
+package com.bilalalp.patentsearcher.service.keywordinfo;
 
 import com.bilalalp.patentsearcher.dao.keywordinfo.KeywordInfoDao;
 import com.bilalalp.patentsearcher.dto.KeywordInfoDto;

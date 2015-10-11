@@ -1,4 +1,4 @@
-package com.bilalalp.patentsearcher.dao.base.siteinfo;
+package com.bilalalp.patentsearcher.dao.siteinfo;
 
 import com.bilalalp.patentsearcher.dao.base.AbstractDao;
 import com.bilalalp.patentsearcher.entity.SiteInfo;

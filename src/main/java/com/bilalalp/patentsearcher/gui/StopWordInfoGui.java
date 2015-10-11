@@ -1,9 +1,9 @@
 package com.bilalalp.patentsearcher.gui;
 
 import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
-import com.bilalalp.patentsearcher.dto.KeywordInfoDto;
-import com.bilalalp.patentsearcher.entity.KeywordInfo;
-import com.bilalalp.patentsearcher.service.keywordinfo.KeywordInfoService;
+import com.bilalalp.patentsearcher.dto.StopWordInfoDto;
+import com.bilalalp.patentsearcher.entity.StopWordInfo;
+import com.bilalalp.patentsearcher.service.stopwordinfo.StopWordInfoService;
 import javafx.application.Application;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
@@ -24,15 +24,16 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import java.util.List;
 
-public class KeywordInfoGui extends Application {
+public class StopWordInfoGui extends Application {
+
 
     final AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(PatentSearcherConfiguration.class);
-    final KeywordInfoService keywordInfoService = annotationConfigApplicationContext.getBean(KeywordInfoService.class);
+    final StopWordInfoService stopWordInfoService = annotationConfigApplicationContext.getBean(StopWordInfoService.class);
 
-    Label keywordLabel = new Label("Keyword : ");
-    TextField keywordTextArea = new TextField();
+    Label stopWordLabel = new Label("StopWord : ");
+    TextField stopWordTextArea = new TextField();
 
-    Button keywordAddButton = new Button("Add");
+    Button stopWordAddButton = new Button("Add");
     Button clearTextAreaButton = new Button("Clear");
     Button refreshButton = new Button("Refresh");
 
@@ -40,7 +41,7 @@ public class KeywordInfoGui extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
 
-        primaryStage.setTitle("Keyword Operations");
+        primaryStage.setTitle("StopWord Operations");
         primaryStage.setResizable(false);
         primaryStage.setAlwaysOnTop(true);
         primaryStage.initModality(Modality.APPLICATION_MODAL);
@@ -50,39 +51,39 @@ public class KeywordInfoGui extends Application {
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
-        TableView<KeywordInfoDto> table = new TableView<>();
+        TableView<StopWordInfoDto> table = new TableView<>();
 
         clearTextAreaButton.setOnAction(event -> clear());
-        keywordAddButton.setOnAction(event -> {
-            saveKeyword();
+        stopWordAddButton.setOnAction(event -> {
+            saveStopWord();
             refreshData(table);
         });
 
-        TableColumn<KeywordInfoDto, Long> idColumn = new TableColumn<>("ID");
+        TableColumn<StopWordInfoDto, Long> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
 
-        TableColumn<KeywordInfoDto, String> keywordColumn = new TableColumn<>("Keyword");
-        keywordColumn.setMinWidth(250);
-        keywordColumn.setEditable(true);
-        keywordColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
+        TableColumn<StopWordInfoDto, String> stopWordColumn = new TableColumn<>("StopWord");
+        stopWordColumn.setMinWidth(250);
+        stopWordColumn.setEditable(true);
+        stopWordColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
 
-        Callback<TableColumn<KeywordInfoDto, String>, TableCell<KeywordInfoDto, String>> cellFactory = p -> new EditingCell();
+        Callback<TableColumn<StopWordInfoDto, String>, TableCell<StopWordInfoDto, String>> cellFactory = p -> new EditingCell();
 
-        keywordColumn.setCellFactory(cellFactory);
-        keywordColumn.setOnEditCommit(t -> t.getTableView().getItems().get(t.getTablePosition().getRow()).setText(t.getNewValue()));
+        stopWordColumn.setCellFactory(cellFactory);
+        stopWordColumn.setOnEditCommit(t -> t.getTableView().getItems().get(t.getTablePosition().getRow()).setText(t.getNewValue()));
 
         TableColumn operationColumn = new TableColumn("Operations");
         operationColumn.setSortable(false);
-        table.getColumns().addAll(idColumn, keywordColumn, operationColumn);
+        table.getColumns().addAll(idColumn, stopWordColumn, operationColumn);
 
-        operationColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<KeywordInfoDto, Boolean>, ObservableValue<Boolean>>() {
+        operationColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<StopWordInfo, Boolean>, ObservableValue<Boolean>>() {
             @Override
-            public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<KeywordInfoDto, Boolean> features) {
+            public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<StopWordInfo, Boolean> features) {
                 return new SimpleBooleanProperty(features.getValue() != null);
             }
         });
 
-        operationColumn.setCellFactory(personBooleanTableColumn -> new KeywordOperationCell(table));
+        operationColumn.setCellFactory(personBooleanTableColumn -> new StopWordOperationCell(table));
 
         table.setEditable(true);
 
@@ -90,62 +91,62 @@ public class KeywordInfoGui extends Application {
 
         refreshButton.setOnAction(event -> refreshData(table));
 
-        grid.add(keywordLabel, 0, 1);
-        grid.add(keywordTextArea, 1, 1);
-        grid.add(keywordAddButton, 2, 1);
+        grid.add(stopWordLabel, 0, 1);
+        grid.add(stopWordTextArea, 1, 1);
+        grid.add(stopWordAddButton, 2, 1);
         grid.add(clearTextAreaButton, 3, 1);
         grid.add(refreshButton, 4, 1);
 
         VBox root = new VBox();
         root.getChildren().addAll(grid, table);
 
-        Scene scene = new Scene(root, 430, 450);
+        Scene scene = new Scene(root, 440, 450);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    private void refreshData(TableView<KeywordInfoDto> table) {
-        final List<KeywordInfo> keywordInfoList = keywordInfoService.findAll();
-        table.setItems(getKeywordInfoObservableList(keywordInfoList));
+    private void refreshData(TableView<StopWordInfoDto> table) {
+        final List<StopWordInfo> stopWordInfoList = stopWordInfoService.findAll();
+        table.setItems(getStopWordInfoObservableList(stopWordInfoList));
     }
 
-    private ObservableList<KeywordInfoDto> getKeywordInfoObservableList(List<KeywordInfo> keywordInfoList) {
+    private ObservableList<StopWordInfoDto> getStopWordInfoObservableList(List<StopWordInfo> stopWordInfoList) {
 
-        final ObservableList<KeywordInfoDto> keywordInfoDtoObservableList = FXCollections.observableArrayList();
+        final ObservableList<StopWordInfoDto> stopWordInfoDtoObservableList = FXCollections.observableArrayList();
 
-        for (final KeywordInfo keywordInfo : keywordInfoList) {
-            keywordInfoDtoObservableList.add(new KeywordInfoDto(keywordInfo.getId(), keywordInfo.getKeyword()));
+        for (final StopWordInfo stopWordInfo : stopWordInfoList) {
+            stopWordInfoDtoObservableList.add(new StopWordInfoDto(stopWordInfo.getId(), stopWordInfo.getWord()));
         }
 
-        return keywordInfoDtoObservableList;
+        return stopWordInfoDtoObservableList;
     }
 
-    private void saveKeyword() {
-        final String keywordText = keywordTextArea.getText();
+    private void saveStopWord() {
+        final String wordText = stopWordTextArea.getText();
 
-        if (keywordText != null && !keywordText.isEmpty()) {
-            keywordInfoService.persist(keywordText);
+        if (wordText != null && !wordText.isEmpty()) {
+            stopWordInfoService.persist(wordText);
             clear();
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Error");
-            alert.setContentText("Keyword can not be empty!");
+            alert.setContentText("StopWord can not be empty!");
             alert.show();
         }
     }
 
     private void clear() {
-        keywordTextArea.setText("");
+        stopWordTextArea.setText("");
     }
 
-    private class KeywordOperationCell extends TableCell<KeywordInfoDto, Boolean> {
+    private class StopWordOperationCell extends TableCell<StopWordInfoDto, Boolean> {
         final Button deleteButton = new Button("Delete");
         final Button updateButton = new Button("Update");
 
         final StackPane paddedButton = new StackPane();
 
-        KeywordOperationCell(TableView<KeywordInfoDto> table) {
+        StopWordOperationCell(TableView<StopWordInfoDto> table) {
             paddedButton.setPadding(new Insets(3));
             HBox vBox = new HBox();
             vBox.setSpacing(10);
@@ -155,18 +156,18 @@ public class KeywordInfoGui extends Application {
             deleteButton.setOnAction(actionEvent -> {
                 final Object item = getTableRow().getItem();
 
-                if (item != null && item instanceof KeywordInfoDto) {
-                    final KeywordInfoDto keywordInfoDto = (KeywordInfoDto) item;
-                    keywordInfoService.remove(keywordInfoDto.getId());
+                if (item != null && item instanceof StopWordInfoDto) {
+                    final StopWordInfoDto stopWordInfoDto = (StopWordInfoDto) item;
+                    stopWordInfoService.remove(stopWordInfoDto.getId());
                     refreshData(table);
                 }
             });
             updateButton.setOnAction(actionEvent -> {
                 final Object item = getTableRow().getItem();
 
-                if (item != null && item instanceof KeywordInfoDto) {
-                    final KeywordInfoDto keywordInfoDto = (KeywordInfoDto) item;
-                    keywordInfoService.update(keywordInfoDto);
+                if (item != null && item instanceof StopWordInfoDto) {
+                    final StopWordInfoDto stopWordInfoDto = (StopWordInfoDto) item;
+                    stopWordInfoService.update(stopWordInfoDto);
                 }
             });
         }
@@ -183,7 +184,7 @@ public class KeywordInfoGui extends Application {
         }
     }
 
-    private class EditingCell extends TableCell<KeywordInfoDto, String> {
+    private class EditingCell extends TableCell<StopWordInfoDto, String> {
 
         private TextField textField;
 

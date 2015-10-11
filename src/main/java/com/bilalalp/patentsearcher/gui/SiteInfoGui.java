@@ -32,7 +32,6 @@ public class SiteInfoGui extends Application {
 
         primaryStage.setTitle("Site Operations");
 
-
         primaryStage.setResizable(false);
         primaryStage.setAlwaysOnTop(true);
         primaryStage.initModality(Modality.APPLICATION_MODAL);
