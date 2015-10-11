@@ -3,6 +3,7 @@ package com.bilalalp.patentsearcher;
 import com.bilalalp.patentsearcher.business.PatentScopePatentSearcherServiceImpl;
 import com.bilalalp.patentsearcher.business.PatentSearcherService;
 import com.bilalalp.patentsearcher.constant.PatentSearcherConstant;
+import com.bilalalp.patentsearcher.dto.UIInfoDto;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
 
 import java.io.IOException;
@@ -18,7 +19,7 @@ public class StartUp {
 
         final long startTime = System.currentTimeMillis();
         final PatentSearcherService patentScopePatentSearcherService = new PatentScopePatentSearcherServiceImpl();
-        final List<PatentInfo> patentInfoList = patentScopePatentSearcherService.getPatentInfoList(PatentSearcherConstant.PATENT_SCOPE_URL);
+        final List<PatentInfo> patentInfoList = patentScopePatentSearcherService.getPatentInfoList(PatentSearcherConstant.PATENT_SCOPE_URL, new UIInfoDto());
         final long endTime = System.currentTimeMillis();
 
         System.out.println("Total Time : " + (endTime - startTime) / 1000);

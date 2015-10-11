@@ -1,6 +1,8 @@
 package com.bilalalp.patentsearcher.business;
 
 import com.bilalalp.patentsearcher.constant.PatentSearcherConstant;
+import com.bilalalp.patentsearcher.dto.UIInfoDto;
+import com.bilalalp.patentsearcher.dto.WaitingEnum;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -13,12 +15,16 @@ import java.util.List;
 
 public class PatentScopePatentSearcherServiceImpl implements PatentSearcherService {
 
+    private WaitingEnum waitingEnum = WaitingEnum.ONE_SECOND;
+
+    private UIInfoDto uiInfoDto;
+
     private static final String MAIN_URL = "https://patentscope.wipo.int/search/en/";
 
     @Override
-    public List<PatentInfo> getPatentInfoList(String searchUrl) throws IOException {
+    public List<PatentInfo> getPatentInfoList(String searchUrl, UIInfoDto uiInfoDto) throws IOException {
 
-        return getPatentLinks(searchUrl);
+        return getPatentLinks(searchUrl, uiInfoDto);
 //        return getPatentContents(patentLinks);
     }
 
@@ -105,9 +111,10 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
     }
 
 
-    private List<PatentInfo> getPatentLinks(String searchUrl) {
+    private List<PatentInfo> getPatentLinks(String searchUrl, UIInfoDto uiInfoDto) {
         int pageNumber = 0;
         final List<PatentInfo> patentInfoList = new ArrayList<>();
+        this.uiInfoDto = uiInfoDto;
 
         boolean eof = false;
 
@@ -122,6 +129,9 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
                 final Element body = document.body();
 
                 final Integer pageCount = getPageCount(body);
+
+
+                uiInfoDto.setTotalRecordCount(pageCount);
 
                 if (pageCount <= pageNumber * 10) {
                     eof = true;
@@ -167,12 +177,14 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
                     }
                 }
 
+                uiInfoDto.setCurrentRecordCount(patentInfoList.size());
                 tryCount = 0;
 
             } catch (final Exception ex) {
 
                 tryCount++;
                 pageNumber--;
+                uiInfoDto.setErrorCount(uiInfoDto.getErrorCount() + 1);
 
                 if (tryCount == PatentSearcherConstant.BREAK_COUNT) {
                     break;
@@ -187,7 +199,13 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
 
     private void sleep() {
         try {
-            Thread.sleep(PatentSearcherConstant.SLEEP_LENGTH);
+//            uiInfoDto.setTotalWaitTime(uiInfoDto.getTotalWaitTime() + waitingEnum.getTime());
+//            Thread.sleep(waitingEnum.getNext().getTime());
+//            waitingEnum = waitingEnum.getNext();
+
+            uiInfoDto.setTotalWaitTime(uiInfoDto.getTotalWaitTime() + waitingEnum.getTime());
+            Thread.sleep(waitingEnum.getTime());
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
