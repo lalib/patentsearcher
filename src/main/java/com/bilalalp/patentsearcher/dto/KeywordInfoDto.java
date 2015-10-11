@@ -3,13 +3,13 @@ package com.bilalalp.patentsearcher.dto;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 
-public class KeywordDto {
+public class KeywordInfoDto {
 
     private final SimpleLongProperty id;
 
     private final SimpleStringProperty text;
 
-    public KeywordDto(Long id, String text) {
+    public KeywordInfoDto(Long id, String text) {
         this.id = new SimpleLongProperty(id);
         this.text = new SimpleStringProperty(text);
     }

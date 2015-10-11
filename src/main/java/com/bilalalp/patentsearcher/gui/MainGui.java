@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MainUI extends Application {
+public class MainGui extends Application {
 
     private UIInfoDto uiInfoDto = new UIInfoDto();
     private Label totalRecordCountLabel = new Label();

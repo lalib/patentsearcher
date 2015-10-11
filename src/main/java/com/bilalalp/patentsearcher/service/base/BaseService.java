@@ -1,6 +1,5 @@
 package com.bilalalp.patentsearcher.service.base;
 
-import com.bilalalp.patentsearcher.dto.KeywordDto;
 import com.bilalalp.patentsearcher.entity.AbstractEntity;
 
 import java.util.List;

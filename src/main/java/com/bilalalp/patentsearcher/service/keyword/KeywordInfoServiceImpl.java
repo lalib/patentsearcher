@@ -1,14 +1,13 @@
 package com.bilalalp.patentsearcher.service.keyword;
 
 import com.bilalalp.patentsearcher.dao.keywordinfo.KeywordInfoDao;
-import com.bilalalp.patentsearcher.dto.KeywordDto;
+import com.bilalalp.patentsearcher.dto.KeywordInfoDto;
 import com.bilalalp.patentsearcher.entity.KeywordInfo;
 import com.bilalalp.patentsearcher.service.base.AbstractService;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Setter
@@ -35,11 +34,11 @@ public class KeywordInfoServiceImpl extends AbstractService<KeywordInfo> impleme
 
     @Override
     @Transactional
-    public void update(KeywordDto keywordDto) {
+    public void update(KeywordInfoDto keywordInfoDto) {
 
-        final String text = keywordDto.getText();
+        final String text = keywordInfoDto.getText();
 
-        final KeywordInfo keywordInfo = findById(keywordDto.getId());
+        final KeywordInfo keywordInfo = findById(keywordInfoDto.getId());
         keywordInfo.setKeyword(text);
 
         super.update(keywordInfo);

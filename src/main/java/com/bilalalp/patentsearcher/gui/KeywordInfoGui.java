@@ -1,7 +1,7 @@
 package com.bilalalp.patentsearcher.gui;
 
 import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
-import com.bilalalp.patentsearcher.dto.KeywordDto;
+import com.bilalalp.patentsearcher.dto.KeywordInfoDto;
 import com.bilalalp.patentsearcher.entity.KeywordInfo;
 import com.bilalalp.patentsearcher.service.keyword.KeywordInfoService;
 import javafx.application.Application;
@@ -17,13 +17,14 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.util.List;
 
-public class KeywordInfoUI extends Application {
+public class KeywordInfoGui extends Application {
 
     final AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(PatentSearcherConfiguration.class);
     final KeywordInfoService keywordInfoService = annotationConfigApplicationContext.getBean(KeywordInfoService.class);
@@ -32,85 +33,91 @@ public class KeywordInfoUI extends Application {
     TextField keywordTextArea = new TextField();
 
     Button keywordAddButton = new Button("Add");
-    Button clearTextArea = new Button("Clear");
-    private TableView<KeywordDto> table = new TableView<>();
+    Button clearTextAreaButton = new Button("Clear");
+    Button refreshButton = new Button("Refresh");
+
 
     @Override
     public void start(Stage primaryStage) throws Exception {
 
-
         primaryStage.setTitle("Keyword Operations");
         primaryStage.setResizable(false);
-
+        primaryStage.setAlwaysOnTop(true);
+        primaryStage.initModality(Modality.APPLICATION_MODAL);
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
-        clearTextArea.setOnAction(event -> clear());
+        TableView<KeywordInfoDto> table = new TableView<>();
+
+        clearTextAreaButton.setOnAction(event -> clear());
         keywordAddButton.setOnAction(event -> {
             saveKeyword();
+            refreshData(table);
         });
 
-        TableColumn<KeywordDto, Long> idColumn = new TableColumn<>("ID");
+        TableColumn<KeywordInfoDto, Long> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
 
-        TableColumn<KeywordDto, String> keywordColumn = new TableColumn<>("Keyword");
-        keywordColumn.setMinWidth(200);
+        TableColumn<KeywordInfoDto, String> keywordColumn = new TableColumn<>("Keyword");
+        keywordColumn.setMinWidth(250);
         keywordColumn.setEditable(true);
         keywordColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
 
-        Callback<TableColumn<KeywordDto, String>, TableCell<KeywordDto, String>> cellFactory = p -> new EditingCell();
+        Callback<TableColumn<KeywordInfoDto, String>, TableCell<KeywordInfoDto, String>> cellFactory = p -> new EditingCell();
 
         keywordColumn.setCellFactory(cellFactory);
-
         keywordColumn.setOnEditCommit(t -> t.getTableView().getItems().get(t.getTablePosition().getRow()).setText(t.getNewValue()));
 
         TableColumn operationColumn = new TableColumn("Operations");
         operationColumn.setSortable(false);
         table.getColumns().addAll(idColumn, keywordColumn, operationColumn);
 
-        operationColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<KeywordDto, Boolean>, ObservableValue<Boolean>>() {
+        operationColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<KeywordInfoDto, Boolean>, ObservableValue<Boolean>>() {
             @Override
-            public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<KeywordDto, Boolean> features) {
+            public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<KeywordInfoDto, Boolean> features) {
                 return new SimpleBooleanProperty(features.getValue() != null);
             }
         });
 
-        operationColumn.setCellFactory(personBooleanTableColumn -> new KeywordOperationCell());
+        operationColumn.setCellFactory(personBooleanTableColumn -> new KeywordOperationCell(table));
 
         table.setEditable(true);
 
-        refreshData();
+        refreshData(table);
+
+        refreshButton.setOnAction(event -> refreshData(table));
 
         grid.add(keywordLabel, 0, 1);
         grid.add(keywordTextArea, 1, 1);
         grid.add(keywordAddButton, 2, 1);
-        grid.add(clearTextArea, 3, 1);
+        grid.add(clearTextAreaButton, 3, 1);
+        grid.add(refreshButton, 4, 1);
 
         VBox root = new VBox();
         root.getChildren().addAll(grid, table);
 
-        Scene scene = new Scene(root, 400, 450);
+        Scene scene = new Scene(root, 430, 450);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    private void refreshData() {
+    private void refreshData(TableView<KeywordInfoDto> table) {
         final List<KeywordInfo> keywordInfoList = keywordInfoService.findAll();
         table.setItems(getKeywordInfoObservableList(keywordInfoList));
     }
 
-    private ObservableList<KeywordDto> getKeywordInfoObservableList(List<KeywordInfo> keywordInfoList) {
+    private ObservableList<KeywordInfoDto> getKeywordInfoObservableList(List<KeywordInfo> keywordInfoList) {
 
-        final ObservableList<KeywordDto> keywordDtoObservableList = FXCollections.observableArrayList();
+        final ObservableList<KeywordInfoDto> keywordInfoDtoObservableList = FXCollections.observableArrayList();
 
         for (final KeywordInfo keywordInfo : keywordInfoList) {
-            keywordDtoObservableList.add(new KeywordDto(keywordInfo.getId(), keywordInfo.getKeyword()));
+            keywordInfoDtoObservableList.add(new KeywordInfoDto(keywordInfo.getId(), keywordInfo.getKeyword()));
         }
 
-        return keywordDtoObservableList;
+        return keywordInfoDtoObservableList;
     }
 
     private void saveKeyword() {
@@ -119,7 +126,6 @@ public class KeywordInfoUI extends Application {
         if (keywordText != null && !keywordText.isEmpty()) {
             keywordInfoService.persist(keywordText);
             clear();
-            refreshData();
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
@@ -133,12 +139,13 @@ public class KeywordInfoUI extends Application {
         keywordTextArea.setText("");
     }
 
-    private class KeywordOperationCell extends TableCell<KeywordDto, Boolean> {
+    private class KeywordOperationCell extends TableCell<KeywordInfoDto, Boolean> {
         final Button deleteButton = new Button("Delete");
         final Button updateButton = new Button("Update");
+
         final StackPane paddedButton = new StackPane();
 
-        KeywordOperationCell() {
+        KeywordOperationCell(TableView<KeywordInfoDto> table) {
             paddedButton.setPadding(new Insets(3));
             HBox vBox = new HBox();
             vBox.setSpacing(10);
@@ -148,18 +155,18 @@ public class KeywordInfoUI extends Application {
             deleteButton.setOnAction(actionEvent -> {
                 final Object item = getTableRow().getItem();
 
-                if (item != null && item instanceof KeywordDto) {
-                    final KeywordDto keywordDto = (KeywordDto) item;
-                    keywordInfoService.remove(keywordDto.getId());
-                    refreshData();
+                if (item != null && item instanceof KeywordInfoDto) {
+                    final KeywordInfoDto keywordInfoDto = (KeywordInfoDto) item;
+                    keywordInfoService.remove(keywordInfoDto.getId());
+                    refreshData(table);
                 }
             });
             updateButton.setOnAction(actionEvent -> {
                 final Object item = getTableRow().getItem();
 
-                if (item != null && item instanceof KeywordDto) {
-                    final KeywordDto keywordDto = (KeywordDto) item;
-                    keywordInfoService.update(keywordDto);
+                if (item != null && item instanceof KeywordInfoDto) {
+                    final KeywordInfoDto keywordInfoDto = (KeywordInfoDto) item;
+                    keywordInfoService.update(keywordInfoDto);
                 }
             });
         }
@@ -176,7 +183,7 @@ public class KeywordInfoUI extends Application {
         }
     }
 
-    private class EditingCell extends TableCell<KeywordDto, String> {
+    private class EditingCell extends TableCell<KeywordInfoDto, String> {
 
         private TextField textField;
 
