@@ -20,5 +20,6 @@ public class SearchInfo extends AbstractEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @OneToMany(targetEntity = KeywordInfo.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<KeywordInfo> keywordInfoList;
 }

@@ -1,4 +1,4 @@
-package com.bilalalp.patentsearcher.business;
+package com.bilalalp.patentsearcher.business.searcher;
 
 import com.bilalalp.patentsearcher.dto.UIInfoDto;
 import com.bilalalp.patentsearcher.entity.PatentInfo;

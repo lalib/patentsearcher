@@ -1,18 +1,28 @@
 package com.bilalalp.patentsearcher.ui;
 
-import com.bilalalp.patentsearcher.business.PatentScopePatentSearcherServiceImpl;
-import com.bilalalp.patentsearcher.business.PatentSearcherService;
+import com.bilalalp.patentsearcher.business.searcher.PatentScopePatentSearcherServiceImpl;
+import com.bilalalp.patentsearcher.business.searcher.PatentSearcherService;
+import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
 import com.bilalalp.patentsearcher.constant.PatentSearcherConstant;
 import com.bilalalp.patentsearcher.dto.UIInfoDto;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,6 +39,8 @@ public class StartUp extends Application {
     private Label totalWaitTime = new Label();
     private Label state = new Label("NOT YET");
 
+    final AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(PatentSearcherConfiguration.class);
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -36,15 +48,19 @@ public class StartUp extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
 
-
         primaryStage.setTitle("Patent Searcher");
+        primaryStage.setOnCloseRequest(event -> System.exit(1));
+        primaryStage.setResizable(false);
 
+        BorderPane root = new BorderPane();
         GridPane grid = new GridPane();
+        root.setCenter(grid);
+        root.setTop(getMenuBar(root.widthProperty()));
+
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
-
 
         Label totalRecordLabel = new Label("Total Record Count :");
         Label currentRecordLabel = new Label("Current Record Count : ");
@@ -67,46 +83,57 @@ public class StartUp extends Application {
         grid.add(stateLabel, 0, 5);
         grid.add(state, 1, 5);
 
-        Scene scene = new Scene(grid, 300, 275);
+        Scene scene = new Scene(root, 600, 450);
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        final ScheduledExecutorService scheduler
-                = Executors.newScheduledThreadPool(1);
+        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-        scheduler.scheduleAtFixedRate(() -> {
+        scheduler.scheduleAtFixedRate(() -> Platform.runLater(() -> {
+            totalRecordCountLabel.setText(uiInfoDto.getTotalRecordCount().toString());
+            currentRecordCountLabel.setText(uiInfoDto.getCurrentRecordCount().toString());
+            errorRecordCountLabel.setText(uiInfoDto.getErrorCount().toString());
+            totalWaitTime.setText(String.valueOf(uiInfoDto.getTotalWaitTime() / 1000));
+        }), 1, 1, TimeUnit.SECONDS);
 
-            Platform.runLater(() -> {
-                totalRecordCountLabel.setText(uiInfoDto.getTotalRecordCount().toString());
-                currentRecordCountLabel.setText(uiInfoDto.getCurrentRecordCount().toString());
-                errorRecordCountLabel.setText(uiInfoDto.getErrorCount().toString());
-                totalWaitTime.setText(String.valueOf(uiInfoDto.getTotalWaitTime() / 1000));
-            });
-        }, 1, 1, TimeUnit.SECONDS);
+        new Thread(startSearchAsANewThread()).start();
+    }
 
-
-        Thread thread = new Thread(() -> {
-
+    private Runnable startSearchAsANewThread() {
+        return () -> {
 
             final long startTime = System.currentTimeMillis();
-            final PatentSearcherService patentScopePatentSearcherService = new PatentScopePatentSearcherServiceImpl();
+            final PatentSearcherService patentScopePatentSearcherService = annotationConfigApplicationContext.getBean("patentScopePatentSearcherService", PatentScopePatentSearcherServiceImpl.class);
             final List<PatentInfo> patentInfoList;
+
             try {
                 patentInfoList = patentScopePatentSearcherService.getPatentInfoList(PatentSearcherConstant.PATENT_SCOPE_URL, uiInfoDto);
                 final long endTime = System.currentTimeMillis();
                 System.out.println("Total Time : " + (endTime - startTime) / 1000);
                 System.out.println(patentInfoList.size());
 
-                Platform.runLater(() -> {
-                    state.setText("FINISHED!");
-                });
+                Platform.runLater(() -> state.setText("FINISHED!"));
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        };
+    }
+
+    public MenuBar getMenuBar(ReadOnlyDoubleProperty readOnlyDoubleProperty) {
+
+        MenuBar menuBar = new MenuBar();
+        menuBar.prefWidthProperty().bind(readOnlyDoubleProperty);
+
+        Menu fileMenu = new Menu("File");
+        MenuItem exitMenuItem = new MenuItem("Exit");
+        exitMenuItem.setOnAction(actionEvent -> {
+            Platform.exit();
+            System.exit(1);
         });
 
-        thread.start();
+        fileMenu.getItems().add(exitMenuItem);
 
-
+        menuBar.getMenus().addAll(fileMenu);
+        return menuBar;
     }
 }
