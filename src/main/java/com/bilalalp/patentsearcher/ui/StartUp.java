@@ -5,11 +5,12 @@ import com.bilalalp.patentsearcher.business.searcher.PatentSearcherService;
 import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
 import com.bilalalp.patentsearcher.constant.PatentSearcherConstant;
 import com.bilalalp.patentsearcher.dto.UIInfoDto;
+import com.bilalalp.patentsearcher.entity.KeywordInfo;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
+import com.bilalalp.patentsearcher.service.KeywordInfoService;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -20,8 +21,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.stage.WindowEvent;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.IOException;
@@ -103,7 +102,7 @@ public class StartUp extends Application {
         return () -> {
 
             final long startTime = System.currentTimeMillis();
-            final PatentSearcherService patentScopePatentSearcherService = annotationConfigApplicationContext.getBean("patentScopePatentSearcherService", PatentScopePatentSearcherServiceImpl.class);
+            final PatentSearcherService patentScopePatentSearcherService = annotationConfigApplicationContext.getBean(PatentScopePatentSearcherServiceImpl.class);
             final List<PatentInfo> patentInfoList;
 
             try {

@@ -31,6 +31,9 @@ public class PatentInfo extends AbstractEntity {
     @Column(name = "C_ABSTRACT_CONTENT")
     private String abstractContent;
 
+    @Column(name = "C_PARSED")
+    private Boolean parsed = Boolean.FALSE;
+
     @ManyToOne(targetEntity = SiteInfo.class, cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     @JoinColumn(name = SiteInfo.JOIN_COLUMN)
     private SiteInfo siteInfo;

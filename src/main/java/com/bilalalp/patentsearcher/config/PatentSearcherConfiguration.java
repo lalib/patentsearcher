@@ -38,7 +38,7 @@ public class PatentSearcherConfiguration {
         localContainerEntityManagerFactoryBean.setDataSource(patentSearcherDataSource());
         localContainerEntityManagerFactoryBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
         localContainerEntityManagerFactoryBean.setJpaDialect(new HibernateJpaDialect());
-        localContainerEntityManagerFactoryBean.setPackagesToScan("com.callturk.cdrimport.entity");
+        localContainerEntityManagerFactoryBean.setPackagesToScan("com.bilalalp.patentsearcher.entity");
         localContainerEntityManagerFactoryBean.setJpaPropertyMap(getJpaPropertyMap());
         return localContainerEntityManagerFactoryBean;
     }
