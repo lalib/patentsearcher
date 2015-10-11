@@ -2,19 +2,20 @@ package com.bilalalp.patentsearcher.gui;
 
 import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
 import com.bilalalp.patentsearcher.dto.SiteInfoDto;
-import com.bilalalp.patentsearcher.entity.KeywordInfo;
 import com.bilalalp.patentsearcher.entity.SiteInfo;
 import com.bilalalp.patentsearcher.service.siteinfo.SiteInfoService;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -36,11 +37,6 @@ public class SiteInfoGui extends Application {
         primaryStage.setAlwaysOnTop(true);
         primaryStage.initModality(Modality.APPLICATION_MODAL);
 
-        final GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(25, 25, 25, 25));
-
         final TableView<SiteInfoDto> table = new TableView<>();
 
         final TableColumn<SiteInfoDto, Long> idColumn = new TableColumn<>("ID");
@@ -59,8 +55,13 @@ public class SiteInfoGui extends Application {
         final List<SiteInfo> siteInfoList = siteInfoService.findAll();
         table.setItems(getSiteInfoDtoObservableList(siteInfoList));
 
+        final Label label = new Label("Site List");
+        label.setTextAlignment(TextAlignment.CENTER);
+        label.setFont(new Font("Arial", 20));
+
         final VBox root = new VBox();
-        root.getChildren().addAll(grid, table);
+        root.setAlignment(Pos.CENTER);
+        root.getChildren().addAll(label, table);
 
         final Scene scene = new Scene(root, 550, 450);
         primaryStage.setScene(scene);
