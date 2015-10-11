@@ -20,9 +20,10 @@ public class SearchInfo extends AbstractEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @OneToMany(targetEntity = KeywordInfo.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(targetEntity = KeywordInfo.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "searchInfo")
     private List<KeywordInfo> keywordInfoList;
 
+    @Column(name = "C_SEARCH_STATUS")
     @Enumerated(EnumType.STRING)
     private SearchInfoStatusType searchInfoStatusType = SearchInfoStatusType.NOT_FINISHED;
 }

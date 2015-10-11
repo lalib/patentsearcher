@@ -1,4 +1,4 @@
-package com.bilalalp.patentsearcher.ui;
+package com.bilalalp.patentsearcher.gui;
 
 import com.bilalalp.patentsearcher.business.searcher.PatentScopePatentSearcherServiceImpl;
 import com.bilalalp.patentsearcher.business.searcher.PatentSearcherService;
@@ -6,16 +6,13 @@ import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
 import com.bilalalp.patentsearcher.constant.PatentSearcherConstant;
 import com.bilalalp.patentsearcher.dto.UIInfoDto;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
+import com.bilalalp.patentsearcher.util.GuiUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
@@ -27,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class StartUp extends Application {
+public class MainUI extends Application {
 
     private UIInfoDto uiInfoDto = new UIInfoDto();
     private Label totalRecordCountLabel = new Label();
@@ -52,7 +49,7 @@ public class StartUp extends Application {
         BorderPane root = new BorderPane();
         GridPane grid = new GridPane();
         root.setCenter(grid);
-        root.setTop(getMenuBar(root.widthProperty()));
+        root.setTop(GuiUtil.getMenuBar(root.widthProperty()));
 
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(10);
@@ -114,23 +111,5 @@ public class StartUp extends Application {
                 e.printStackTrace();
             }
         };
-    }
-
-    public MenuBar getMenuBar(ReadOnlyDoubleProperty readOnlyDoubleProperty) {
-
-        MenuBar menuBar = new MenuBar();
-        menuBar.prefWidthProperty().bind(readOnlyDoubleProperty);
-
-        Menu fileMenu = new Menu("File");
-        MenuItem exitMenuItem = new MenuItem("Exit");
-        exitMenuItem.setOnAction(actionEvent -> {
-            Platform.exit();
-            System.exit(1);
-        });
-
-        fileMenu.getItems().add(exitMenuItem);
-
-        menuBar.getMenus().addAll(fileMenu);
-        return menuBar;
     }
 }
