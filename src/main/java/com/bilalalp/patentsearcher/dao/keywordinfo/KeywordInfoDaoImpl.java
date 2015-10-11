@@ -1,5 +1,6 @@
-package com.bilalalp.patentsearcher.dao;
+package com.bilalalp.patentsearcher.dao.keywordinfo;
 
+import com.bilalalp.patentsearcher.dao.AbstractDao;
 import com.bilalalp.patentsearcher.entity.KeywordInfo;
 import org.springframework.stereotype.Repository;
 

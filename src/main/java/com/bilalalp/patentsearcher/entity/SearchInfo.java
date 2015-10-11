@@ -22,4 +22,7 @@ public class SearchInfo extends AbstractEntity {
 
     @OneToMany(targetEntity = KeywordInfo.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<KeywordInfo> keywordInfoList;
+
+    @Enumerated(EnumType.STRING)
+    private SearchInfoStatusType searchInfoStatusType = SearchInfoStatusType.NOT_FINISHED;
 }

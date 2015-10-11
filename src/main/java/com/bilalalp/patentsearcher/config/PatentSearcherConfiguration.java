@@ -91,6 +91,7 @@ public class PatentSearcherConfiguration {
         jpaPropertyMap.put("hibernate.cache.region.factory_class", environment.getProperty("hibernate.cache.region.factory_class", String.class));
         jpaPropertyMap.put("hibernate.cache.use_query_cache", environment.getProperty("hibernate.cache.use_query_cache", Boolean.class));
         jpaPropertyMap.put("hibernate.cache.use_second_level_cache", environment.getProperty("hibernate.cache.use_second_level_cache", Boolean.class));
+        jpaPropertyMap.put("hibernate.default_schema",environment.getProperty("hibernate.default_schema"));
         return jpaPropertyMap;
     }
 }
