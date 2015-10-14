@@ -4,6 +4,8 @@ import com.bilalalp.patentsearcher.business.searcher.PatentScopePatentSearcherSe
 import com.bilalalp.patentsearcher.business.searcher.PatentSearcherService;
 import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
 import com.bilalalp.patentsearcher.constant.PatentSearcherConstant;
+import com.bilalalp.patentsearcher.dto.KeywordInfoDto;
+import com.bilalalp.patentsearcher.dto.SearchingDto;
 import com.bilalalp.patentsearcher.dto.UIInfoDto;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
 import com.bilalalp.patentsearcher.util.GuiUtil;
@@ -19,6 +21,7 @@ import javafx.stage.Stage;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -100,8 +103,11 @@ public class MainGui extends Application {
             final PatentSearcherService patentScopePatentSearcherService = annotationConfigApplicationContext.getBean(PatentScopePatentSearcherServiceImpl.class);
             final List<PatentInfo> patentInfoList;
 
+            KeywordInfoDto keywordInfoDto = new KeywordInfoDto(0L, "nanotechnology");
+            KeywordInfoDto keywordInfoDto1 = new KeywordInfoDto(1L, "weblogic");
+
             try {
-                patentInfoList = patentScopePatentSearcherService.getPatentInfoList(PatentSearcherConstant.PATENT_SCOPE_URL, uiInfoDto);
+                patentInfoList = patentScopePatentSearcherService.getPatentInfoList(Arrays.asList(keywordInfoDto, keywordInfoDto1), uiInfoDto);
                 final long endTime = System.currentTimeMillis();
                 System.out.println("Total Time : " + (endTime - startTime) / 1000);
                 System.out.println(patentInfoList.size());

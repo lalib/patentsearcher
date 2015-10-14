@@ -23,6 +23,7 @@ import javafx.util.Callback;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class KeywordInfoGui extends Application {
 
@@ -112,11 +113,7 @@ public class KeywordInfoGui extends Application {
     private ObservableList<KeywordInfoDto> getKeywordInfoObservableList(List<KeywordInfo> keywordInfoList) {
 
         final ObservableList<KeywordInfoDto> keywordInfoDtoObservableList = FXCollections.observableArrayList();
-
-        for (final KeywordInfo keywordInfo : keywordInfoList) {
-            keywordInfoDtoObservableList.add(new KeywordInfoDto(keywordInfo.getId(), keywordInfo.getKeyword()));
-        }
-
+        keywordInfoDtoObservableList.addAll(keywordInfoList.stream().map(keywordInfo -> new KeywordInfoDto(keywordInfo.getId(), keywordInfo.getKeyword())).collect(Collectors.toList()));
         return keywordInfoDtoObservableList;
     }
 

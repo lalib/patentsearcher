@@ -1,6 +1,7 @@
 package com.bilalalp.patentsearcher.business.searcher;
 
 import com.bilalalp.patentsearcher.constant.PatentSearcherConstant;
+import com.bilalalp.patentsearcher.dto.KeywordInfoDto;
 import com.bilalalp.patentsearcher.dto.UIInfoDto;
 import com.bilalalp.patentsearcher.dto.WaitingEnum;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
@@ -23,13 +24,16 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
     private static final String MAIN_URL = "https://patentscope.wipo.int/search/en/";
 
     @Override
-    public List<PatentInfo> getPatentInfoList(String searchUrl, UIInfoDto uiInfoDto) throws IOException {
+    public List<PatentInfo> getPatentInfoList(List<KeywordInfoDto> keywordInfoDtoList, UIInfoDto uiInfoDto) throws IOException {
 
         int pageNumber = 0;
         final List<PatentInfo> patentInfoList = new ArrayList<>();
         boolean eof = false;
 
         int tryCount = 0;
+
+        final String searchUrl = createSearchUrl(keywordInfoDtoList);
+        uiInfoDto.setGeneratedLink(searchUrl);
 
         while (!eof) {
 
@@ -92,6 +96,33 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
         }
 
         return patentInfoList;
+    }
+
+    @Override
+    public String getSiteUrl() {
+        return MAIN_URL;
+    }
+
+    @Override
+    public String createSearchUrl(List<KeywordInfoDto> keywordInfoDtoList) {
+
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("https://patentscope.wipo.int/search/en/result.jsf?query=");
+
+        for (final KeywordInfoDto keywordInfoDto : keywordInfoDtoList) {
+            final String replacedKeyword = keywordInfoDto.getText().replace(" ", "%20");
+            stringBuilder.append("FP:(").append(replacedKeyword).append(")%20OR%20");
+            stringBuilder.append("EN_AB:(").append(replacedKeyword).append(")%20OR%20");
+            stringBuilder.append("EN_CL:(").append(replacedKeyword).append(")%20OR%20");
+            stringBuilder.append("EN_DE:(").append(replacedKeyword).append(")%20OR%20");
+            stringBuilder.append("PA:(").append(replacedKeyword).append(")%20OR%20");
+            stringBuilder.append("EN_ALLTXT:(").append(replacedKeyword).append(")%20OR%20");
+            stringBuilder.append("EN_TI:(").append(replacedKeyword).append(")%20&");
+        }
+
+        stringBuilder.append("sortOption=Relevance&viewOption=Simple&currentNavigationRow=");
+
+        return stringBuilder.toString();
     }
 
     private PatentInfo getPatentInfo(Element element, Elements aClass) {

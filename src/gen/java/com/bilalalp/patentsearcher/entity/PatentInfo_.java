@@ -8,6 +8,7 @@ import javax.persistence.metamodel.StaticMetamodel;
 @StaticMetamodel(PatentInfo.class)
 public abstract class PatentInfo_ extends com.bilalalp.patentsearcher.entity.AbstractEntity_ {
 
+	public static volatile SingularAttribute<PatentInfo, String> searchLink;
 	public static volatile SingularAttribute<PatentInfo, SearchInfo> searchInfo;
 	public static volatile SingularAttribute<PatentInfo, String> patentNumber;
 	public static volatile SingularAttribute<PatentInfo, String> abstractContent;

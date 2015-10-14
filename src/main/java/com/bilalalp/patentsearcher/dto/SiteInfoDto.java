@@ -11,6 +11,8 @@ public class SiteInfoDto {
 
     private final SimpleStringProperty siteAddress;
 
+    private Boolean selected = Boolean.FALSE;
+
     public SiteInfoDto(Long id, String siteName, String siteAddress) {
         this.id = new SimpleLongProperty(id);
         this.siteName = new SimpleStringProperty(siteName);
@@ -27,5 +29,13 @@ public class SiteInfoDto {
 
     public String getSiteName() {
         return siteName.get();
+    }
+
+    public Boolean getSelected() {
+        return selected;
+    }
+
+    public void setSelected(Boolean selected) {
+        this.selected = selected;
     }
 }

@@ -14,4 +14,6 @@ public class UIInfoDto {
     private Integer errorCount = 0;
 
     private Integer totalWaitTime = 0;
+
+    private String generatedLink;
 }

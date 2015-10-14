@@ -9,6 +9,8 @@ public class KeywordInfoDto {
 
     private final SimpleStringProperty text;
 
+    private Boolean selected = Boolean.FALSE;
+
     public KeywordInfoDto(Long id, String text) {
         this.id = new SimpleLongProperty(id);
         this.text = new SimpleStringProperty(text);
@@ -24,5 +26,13 @@ public class KeywordInfoDto {
 
     public void setText(String text) {
         this.text.set(text);
+    }
+
+    public Boolean getSelected() {
+        return selected;
+    }
+
+    public void setSelected(Boolean selected) {
+        this.selected = selected;
     }
 }
