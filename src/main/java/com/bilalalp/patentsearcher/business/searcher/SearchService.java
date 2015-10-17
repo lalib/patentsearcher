@@ -3,10 +3,12 @@ package com.bilalalp.patentsearcher.business.searcher;
 import com.bilalalp.patentsearcher.config.PatentSearcherApplicationContextAware;
 import com.bilalalp.patentsearcher.dto.SearchingDto;
 import com.bilalalp.patentsearcher.dto.UIInfoDto;
+import com.bilalalp.patentsearcher.entity.PatentInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -23,7 +25,9 @@ public class SearchService {
             final PatentSearcherService value = serviceEntry.getValue();
 
             if (value.getSiteUrl().equals(searchingDto.getSiteInfoDto().getSiteAddress())) {
-                value.getPatentInfoList(searchingDto.getKeywordInfoList(), uiInfoDto);
+                final List<PatentInfo> patentInfoList = value.getPatentInfoList(searchingDto.getKeywordInfoList(), uiInfoDto);
+
+
             }
         }
     }

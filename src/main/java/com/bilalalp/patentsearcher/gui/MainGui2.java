@@ -59,6 +59,7 @@ public class MainGui2 extends Application {
     public void start(Stage primaryStage) throws Exception {
 
         primaryStage.setTitle("Patent Searcher");
+        primaryStage.setOnCloseRequest(event -> System.exit(1));
         Group root = new Group();
         Scene scene = new Scene(root, 1200, 600, Color.WHITE);
 
@@ -180,6 +181,11 @@ public class MainGui2 extends Application {
         Label totalWaitTimeLabel = new Label("Total Wait Time : ");
         Label stateLabel = new Label("State : ");
 
+        stopButton.setOnAction(event -> {
+            searchThread.stop();
+            state.setText("STOPPED!");
+        });
+
         startButton.setOnAction(event -> {
 
             final ObservableList<KeywordInfoDto> keywordInfoDtoObservableList = table.getItems();
@@ -205,6 +211,8 @@ public class MainGui2 extends Application {
                 alert.show();
                 return;
             }
+
+            state.setText("NOT YET");
 
             final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
             scheduler.scheduleAtFixedRate(() -> Platform.runLater(() -> {
