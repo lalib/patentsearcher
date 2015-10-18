@@ -33,10 +33,10 @@ public class SearcherService {
 
         final Date startTime = new Date();
         for (Map.Entry<String, PatentSearcherService> serviceEntry : beansOfType.entrySet()) {
-            final PatentSearcherService value = serviceEntry.getValue();
+            final PatentSearcherService patentSearcherService = serviceEntry.getValue();
 
-            if (value.getSiteUrl().equals(searchingDto.getSiteInfoDto().getSiteAddress())) {
-                value.getPatentInfoList(searchingDto, uiInfoDto);
+            if (patentSearcherService.getSiteUrl() != null && patentSearcherService.getSiteUrl().equals(searchingDto.getSiteInfoDto().getSiteAddress())) {
+                patentSearcherService.getPatentInfoList(searchingDto, uiInfoDto);
             }
         }
 

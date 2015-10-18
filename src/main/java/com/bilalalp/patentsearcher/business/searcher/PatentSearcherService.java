@@ -16,6 +16,4 @@ public interface PatentSearcherService {
     String getSiteUrl();
 
     String createSearchUrl(List<KeywordInfoDto> keywordInfoDtoList);
-
-    SiteInfo getSiteInfo();
 }

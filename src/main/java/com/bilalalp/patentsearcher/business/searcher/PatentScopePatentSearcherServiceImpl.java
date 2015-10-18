@@ -17,9 +17,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,19 +29,24 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
 
     private WaitingEnum waitingEnum = WaitingEnum.ONE_SECOND;
 
-    private static final String MAIN_URL = "https://patentscope.wipo.int/search/en/";
-
     @Autowired
     private PatentInfoService patentInfoService;
 
     @Autowired
     private SiteInfoService siteInfoService;
 
+    private SiteInfo siteInfo;
+
+    @PostConstruct
+    public void init() {
+        siteInfo = siteInfoService.findBySiteKey(PatentSearcherInitialData.getPatentScopeSiteInfo().getSiteKey());
+    }
+
     @Override
     @Transactional
     public List<PatentInfo> getPatentInfoList(SearchingDto searchingDto, UIInfoDto uiInfoDto) throws IOException {
 
-        final SiteInfo siteInfo = getSiteInfo();
+        final SiteInfo siteInfo = this.siteInfo;
         final List<KeywordInfoDto> keywordInfoDtoList = searchingDto.getKeywordInfoList();
 
         int pageNumber = 0;
@@ -124,7 +129,7 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
 
     @Override
     public String getSiteUrl() {
-        return MAIN_URL;
+        return siteInfo.getSiteAddres();
     }
 
     @Override
@@ -156,12 +161,6 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
         return stringBuilder.toString();
     }
 
-    @Override
-    public SiteInfo getSiteInfo() {
-
-        return siteInfoService.findBySiteKey(PatentSearcherInitialData.getPatentScopeSiteInfo().getSiteKey());
-    }
-
     private PatentInfo getPatentInfo(Element element, Elements aClass) {
         final PatentInfo patentInfo = new PatentInfo();
 
@@ -177,7 +176,7 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
         if (aElements != null && !aElements.isEmpty()) {
 
             final String href = aElements.get(0).attr("href");
-            patentInfo.setPatentLink(MAIN_URL + href);
+            patentInfo.setPatentLink(siteInfo.getSiteAddres() + href);
         } else {
             return null;
         }
