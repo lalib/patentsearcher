@@ -6,4 +6,5 @@ import com.bilalalp.patentsearcher.entity.SiteInfo;
 public interface SiteInfoDao extends Dao<SiteInfo> {
 
     SiteInfo getSiteInfoBySiteKey(String siteKey);
+
 }

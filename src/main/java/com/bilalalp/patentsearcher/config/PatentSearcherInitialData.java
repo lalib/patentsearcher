@@ -16,17 +16,26 @@ public final class PatentSearcherInitialData {
 
         final List<SiteInfo> siteInfoList = new ArrayList<>();
 
-        final SiteInfo patentScopeSite = new SiteInfo();
-        patentScopeSite.setSiteAddres("https://patentscope.wipo.int/search/en/");
-        patentScopeSite.setSiteKey("PATENT_SCOPE");
-        patentScopeSite.setSiteName("Patent Scope");
+        final SiteInfo patentScopeSite = getPatentScopeSiteInfo();
+        final SiteInfo usptoPatentSite = getUSPTOSiteInfo();
 
+        siteInfoList.addAll(Arrays.asList(usptoPatentSite, patentScopeSite));
+        return siteInfoList;
+    }
+
+    public static SiteInfo getUSPTOSiteInfo() {
         final SiteInfo usptoPatentSite = new SiteInfo();
         usptoPatentSite.setSiteAddres("http://patft.uspto.gov/netahtml/PTO/index.html");
         usptoPatentSite.setSiteName("Uspto");
         usptoPatentSite.setSiteKey("USPTO");
+        return usptoPatentSite;
+    }
 
-        siteInfoList.addAll(Arrays.asList(usptoPatentSite, patentScopeSite));
-        return siteInfoList;
+    public static SiteInfo getPatentScopeSiteInfo() {
+        final SiteInfo patentScopeSite = new SiteInfo();
+        patentScopeSite.setSiteAddres("https://patentscope.wipo.int/search/en/");
+        patentScopeSite.setSiteKey("PATENT_SCOPE");
+        patentScopeSite.setSiteName("Patent Scope");
+        return patentScopeSite;
     }
 }

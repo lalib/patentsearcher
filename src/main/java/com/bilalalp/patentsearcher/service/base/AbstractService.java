@@ -3,6 +3,7 @@ package com.bilalalp.patentsearcher.service.base;
 
 import com.bilalalp.patentsearcher.dao.base.Dao;
 import com.bilalalp.patentsearcher.entity.AbstractEntity;
+import com.bilalalp.patentsearcher.entity.SearchInfo;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -53,7 +54,19 @@ public abstract class AbstractService<E extends AbstractEntity> implements BaseS
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED)
     public void update(E entity) {
         getDao().update(entity);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void flush() {
+        getDao().flush();
+    }
+
+    @Override
+    public void refresh(E entity) {
+        getDao().refresh(entity);
     }
 }

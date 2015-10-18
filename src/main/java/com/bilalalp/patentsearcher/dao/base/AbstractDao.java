@@ -80,4 +80,15 @@ public abstract class AbstractDao<E extends AbstractEntity> implements Dao<E> {
     public void update(E entity) {
         getEntityManager().merge(entity);
     }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void flush() {
+        getEntityManager().flush();
+    }
+
+    @Override
+    public void refresh(E entity) {
+        getEntityManager().refresh(entity);
+    }
 }

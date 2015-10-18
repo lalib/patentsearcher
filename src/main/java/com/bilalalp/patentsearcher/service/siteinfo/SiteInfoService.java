@@ -8,4 +8,6 @@ import java.util.List;
 public interface SiteInfoService extends BaseService<SiteInfo> {
 
     void persistIfNotExist(List<SiteInfo> initialSiteInfoList);
+
+    SiteInfo findBySiteKey(String siteName);
 }

@@ -19,9 +19,9 @@
 
         <hibernate.version>5.0.2.Final</hibernate.version>
         <javax.persistence.version>1.0.0.Final</javax.persistence.version>
-        <spring.version>4.2.1.RELEASE</spring.version>
+        <spring.version>4.2.2.RELEASE</spring.version>
         <c3p0.version>0.9.5.1</c3p0.version>
-        <h2.version>1.4.189</h2.version>
+        <h2.version>1.4.190</h2.version>
 
         <maven.compiler.plugin.version>3.2</maven.compiler.plugin.version>
     </properties>

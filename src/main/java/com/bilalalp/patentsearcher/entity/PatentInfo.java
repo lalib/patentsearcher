@@ -22,18 +22,22 @@ public class PatentInfo extends AbstractEntity {
     @Column(name = "C_PATENT_NUMBER")
     private String patentNumber;
 
+    @Lob
     @Column(name = "C_PATENT_TITLE")
     private String patentTitle;
 
+    @Lob
     @Column(name = "C_PATENT_LINK")
     private String patentLink;
 
+    @Lob
     @Column(name = "C_ABSTRACT_CONTENT")
     private String abstractContent;
 
     @Column(name = "C_PARSED")
     private Boolean parsed = Boolean.FALSE;
 
+    @Lob
     @Column(name = "C_SEARCH_LINK")
     private String searchLink;
 

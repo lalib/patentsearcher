@@ -38,4 +38,11 @@ public class SiteInfoServiceImpl extends AbstractService<SiteInfo> implements Si
             }
         }
     }
+
+    @Override
+    @Transactional
+    public SiteInfo findBySiteKey(String siteKey) {
+
+        return siteInfoDao.getSiteInfoBySiteKey(siteKey);
+    }
 }

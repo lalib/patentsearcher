@@ -1,16 +1,24 @@
 package com.bilalalp.patentsearcher.business.searcher;
 
+import com.bilalalp.patentsearcher.config.PatentSearcherInitialData;
 import com.bilalalp.patentsearcher.constant.PatentSearcherConstant;
 import com.bilalalp.patentsearcher.dto.KeywordInfoDto;
+import com.bilalalp.patentsearcher.dto.SearchingDto;
 import com.bilalalp.patentsearcher.dto.UIInfoDto;
 import com.bilalalp.patentsearcher.dto.WaitingEnum;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
+import com.bilalalp.patentsearcher.entity.SiteInfo;
+import com.bilalalp.patentsearcher.service.patentinfo.PatentInfoService;
+import com.bilalalp.patentsearcher.service.siteinfo.SiteInfoService;
 import com.bilalalp.patentsearcher.util.JSoupUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,8 +31,18 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
 
     private static final String MAIN_URL = "https://patentscope.wipo.int/search/en/";
 
+    @Autowired
+    private PatentInfoService patentInfoService;
+
+    @Autowired
+    private SiteInfoService siteInfoService;
+
     @Override
-    public List<PatentInfo> getPatentInfoList(List<KeywordInfoDto> keywordInfoDtoList, UIInfoDto uiInfoDto) throws IOException {
+    @Transactional
+    public List<PatentInfo> getPatentInfoList(SearchingDto searchingDto, UIInfoDto uiInfoDto) throws IOException {
+
+        final SiteInfo siteInfo = getSiteInfo();
+        final List<KeywordInfoDto> keywordInfoDtoList = searchingDto.getKeywordInfoList();
 
         int pageNumber = 0;
         final List<PatentInfo> patentInfoList = new ArrayList<>();
@@ -40,7 +58,8 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
             try {
 
                 pageNumber++;
-                final Document document = Jsoup.connect(searchUrl + pageNumber).timeout(PatentSearcherConstant.TIMEOUT).get();
+                final String link = searchUrl + pageNumber;
+                final Document document = Jsoup.connect(link).timeout(PatentSearcherConstant.TIMEOUT).get();
                 final Element body = document.body();
 
                 final Integer pageCount = getPageCount(body);
@@ -73,6 +92,11 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
                                 continue;
                             }
 
+                            patentInfo.setSiteInfo(siteInfo);
+                            patentInfo.setSearchLink(link);
+                            patentInfo.setSearchInfo(searchingDto.getSearchInfo());
+
+                            patentInfoService.persistWithNewTransaction(patentInfo);
                             patentInfoList.add(patentInfo);
                         }
                     }
@@ -109,7 +133,10 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("https://patentscope.wipo.int/search/en/result.jsf?query=");
 
+        int index = 0;
+
         for (final KeywordInfoDto keywordInfoDto : keywordInfoDtoList) {
+            index++;
             final String replacedKeyword = keywordInfoDto.getText().replace(" ", "%20");
             stringBuilder.append("FP:(").append(replacedKeyword).append(")%20OR%20");
             stringBuilder.append("EN_AB:(").append(replacedKeyword).append(")%20OR%20");
@@ -117,12 +144,22 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
             stringBuilder.append("EN_DE:(").append(replacedKeyword).append(")%20OR%20");
             stringBuilder.append("PA:(").append(replacedKeyword).append(")%20OR%20");
             stringBuilder.append("EN_ALLTXT:(").append(replacedKeyword).append(")%20OR%20");
-            stringBuilder.append("EN_TI:(").append(replacedKeyword).append(")%20&");
+            stringBuilder.append("EN_TI:(").append(replacedKeyword).append(")");
+
+            if (keywordInfoDtoList.size() == index) {
+                stringBuilder.append("%20&");
+            }
         }
 
         stringBuilder.append("sortOption=Relevance&viewOption=Simple&currentNavigationRow=");
 
         return stringBuilder.toString();
+    }
+
+    @Override
+    public SiteInfo getSiteInfo() {
+
+        return siteInfoService.findBySiteKey(PatentSearcherInitialData.getPatentScopeSiteInfo().getSiteKey());
     }
 
     private PatentInfo getPatentInfo(Element element, Elements aClass) {

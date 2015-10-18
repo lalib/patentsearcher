@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -26,4 +27,12 @@ public class SearchInfo extends AbstractEntity {
     @Column(name = "C_SEARCH_STATUS")
     @Enumerated(EnumType.STRING)
     private SearchInfoStatusType searchInfoStatusType = SearchInfoStatusType.NOT_FINISHED;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "C_START_TIME")
+    private Date startTime;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "C_END_TIME")
+    private Date endTime;
 }
