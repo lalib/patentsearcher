@@ -116,7 +116,7 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
                 pageNumber--;
                 uiInfoDto.setErrorCount(uiInfoDto.getErrorCount() + 1);
 
-                if (tryCount == PatentSearcherConstant.BREAK_COUNT) {
+                if (PatentSearcherConstant.BREAK_COUNT.equals(tryCount)) {
                     break;
                 }
 
@@ -143,22 +143,27 @@ public class PatentScopePatentSearcherServiceImpl implements PatentSearcherServi
         for (final KeywordInfoDto keywordInfoDto : keywordInfoDtoList) {
             index++;
             final String replacedKeyword = keywordInfoDto.getText().replace(" ", "%20");
-            stringBuilder.append("FP:(").append(replacedKeyword).append(")%20OR%20");
-            stringBuilder.append("EN_AB:(").append(replacedKeyword).append(")%20OR%20");
-            stringBuilder.append("EN_CL:(").append(replacedKeyword).append(")%20OR%20");
-            stringBuilder.append("EN_DE:(").append(replacedKeyword).append(")%20OR%20");
-            stringBuilder.append("PA:(").append(replacedKeyword).append(")%20OR%20");
-            stringBuilder.append("EN_ALLTXT:(").append(replacedKeyword).append(")%20OR%20");
-            stringBuilder.append("EN_TI:(").append(replacedKeyword).append(")");
+            stringBuilder
+                    .append("FP:(").append(replacedKeyword)
+                    .append(")%20OR%20").append("EN_AB:(")
+                    .append(replacedKeyword).append(")%20OR%20")
+                    .append("EN_CL:(").append(replacedKeyword)
+                    .append(")%20OR%20").append("EN_DE:(")
+                    .append(replacedKeyword).append(")%20OR%20")
+                    .append("PA:(").append(replacedKeyword)
+                    .append(")%20OR%20").append("EN_ALLTXT:(")
+                    .append(replacedKeyword).append(")%20OR%20")
+                    .append("EN_TI:(").append(replacedKeyword)
+                    .append(")");
 
             if (keywordInfoDtoList.size() == index) {
                 stringBuilder.append("%20&");
             }
         }
 
-        stringBuilder.append("sortOption=Relevance&viewOption=Simple&currentNavigationRow=");
-
-        return stringBuilder.toString();
+        return stringBuilder
+                .append("sortOption=Relevance&viewOption=Simple&currentNavigationRow=")
+                .toString();
     }
 
     private PatentInfo getPatentInfo(Element element, Elements aClass) {

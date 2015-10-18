@@ -41,11 +41,11 @@ public class PatentInfo extends AbstractEntity {
     @Column(name = "C_SEARCH_LINK")
     private String searchLink;
 
-    @ManyToOne(targetEntity = SiteInfo.class, cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @ManyToOne(targetEntity = SiteInfo.class, fetch = FetchType.LAZY)
     @JoinColumn(name = SiteInfo.JOIN_COLUMN)
     private SiteInfo siteInfo;
 
-    @ManyToOne(targetEntity = SearchInfo.class, cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @ManyToOne(targetEntity = SearchInfo.class, fetch = FetchType.LAZY)
     @JoinColumn(name = SearchInfo.JOIN_COLUMN)
     private SearchInfo searchInfo;
 

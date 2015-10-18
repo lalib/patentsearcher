@@ -4,7 +4,6 @@ import com.bilalalp.patentsearcher.dto.KeywordInfoDto;
 import com.bilalalp.patentsearcher.dto.SearchingDto;
 import com.bilalalp.patentsearcher.dto.UIInfoDto;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
-import com.bilalalp.patentsearcher.entity.SiteInfo;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
