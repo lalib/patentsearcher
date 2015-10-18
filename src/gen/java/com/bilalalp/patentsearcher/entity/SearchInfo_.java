@@ -1,5 +1,6 @@
 package com.bilalalp.patentsearcher.entity;
 
+import java.util.Date;
 import javax.annotation.Generated;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.SingularAttribute;
@@ -11,7 +12,9 @@ public abstract class SearchInfo_ extends com.bilalalp.patentsearcher.entity.Abs
 
 	public static volatile ListAttribute<SearchInfo, KeywordInfo> keywordInfoList;
 	public static volatile SingularAttribute<SearchInfo, SearchInfoStatusType> searchInfoStatusType;
+	public static volatile SingularAttribute<SearchInfo, Date> startTime;
 	public static volatile SingularAttribute<SearchInfo, Long> id;
+	public static volatile SingularAttribute<SearchInfo, Date> endTime;
 
 }
 
