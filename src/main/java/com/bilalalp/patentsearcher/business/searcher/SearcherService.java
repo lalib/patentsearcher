@@ -51,7 +51,6 @@ public class SearcherService {
     }
 
     private SearchInfo getSearchInfo(final SearchingDto searchingDto) {
-
         return searchInfoService.persistWithNewTransaction(searchingDto);
     }
 }
