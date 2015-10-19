@@ -21,8 +21,4 @@ public class KeywordInfo extends AbstractEntity {
 
     @Column(name = "C_KEYWORD")
     private String keyword;
-
-    @JoinColumn(name = SearchInfo.JOIN_COLUMN)
-    @ManyToOne(targetEntity = SearchInfo.class, fetch = FetchType.LAZY)
-    private SearchInfo searchInfo;
 }

@@ -28,7 +28,7 @@ public class SearcherService {
 
         final Map<String, PatentSearcherService> beansOfType = patentSearcherApplicationContextAware.getContext().getBeansOfType(PatentSearcherService.class);
 
-        SearchInfo searchInfo = getSearchInfo(searchingDto);
+        SearchInfo searchInfo = searchInfoService.persistWithNewTransaction(searchingDto);
         searchingDto.setSearchInfo(searchInfo);
 
         final Date startTime = new Date();
@@ -48,9 +48,5 @@ public class SearcherService {
         searchInfo.setEndTime(endTime);
 
         searchInfoService.update(searchInfo);
-    }
-
-    private SearchInfo getSearchInfo(final SearchingDto searchingDto) {
-        return searchInfoService.persistWithNewTransaction(searchingDto);
     }
 }

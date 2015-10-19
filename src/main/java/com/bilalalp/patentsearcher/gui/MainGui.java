@@ -2,11 +2,9 @@ package com.bilalalp.patentsearcher.gui;
 
 import com.bilalalp.patentsearcher.business.searcher.SearcherService;
 import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
-import com.bilalalp.patentsearcher.dto.KeywordInfoDto;
-import com.bilalalp.patentsearcher.dto.SearchingDto;
-import com.bilalalp.patentsearcher.dto.SiteInfoDto;
-import com.bilalalp.patentsearcher.dto.UIInfoDto;
+import com.bilalalp.patentsearcher.dto.*;
 import com.bilalalp.patentsearcher.entity.KeywordInfo;
+import com.bilalalp.patentsearcher.entity.SearchInfo;
 import com.bilalalp.patentsearcher.entity.SiteInfo;
 import com.bilalalp.patentsearcher.service.keywordinfo.KeywordInfoService;
 import com.bilalalp.patentsearcher.service.searchinfo.SearchInfoService;
@@ -29,6 +27,7 @@ import javafx.stage.Stage;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -88,8 +87,43 @@ public class MainGui extends Application {
         Tab tab2 = new Tab();
         tab2.setClosable(false);
         tab2.setText("Content Search");
+
+        final HBox hBox = new HBox();
+        final TableView<SearchInfoDto> searchInfoDtoTableView = new TableView<>();
+
+        final TableColumn<SearchInfoDto, Long> idColumn = new TableColumn<>("ID");
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+
+        final TableColumn<SearchInfoDto, String> dateColumn = new TableColumn<>("Search Date");
+        dateColumn.setCellValueFactory(new PropertyValueFactory<>("searchDate"));
+
+        final TableColumn<SearchInfoDto, String> stateColumn = new TableColumn<>("State");
+        stateColumn.setCellValueFactory(new PropertyValueFactory<>("state"));
+
+        final TableColumn<SearchInfoDto, Long> linkCountColumn = new TableColumn<>("Total Link");
+        linkCountColumn.setCellValueFactory(new PropertyValueFactory<>("linkCount"));
+
+        final TableColumn<SearchInfoDto, Long> totalTimeColumn = new TableColumn<>("Total Time");
+        totalTimeColumn.setCellValueFactory(new PropertyValueFactory<>("totalTime"));
+
+        final List<TableColumn<SearchInfoDto, ?>> keywordInfoDtoObservableList = new ArrayList<>();
+        keywordInfoDtoObservableList.add(idColumn);
+        keywordInfoDtoObservableList.add(dateColumn);
+        keywordInfoDtoObservableList.add(stateColumn);
+        keywordInfoDtoObservableList.add(linkCountColumn);
+        keywordInfoDtoObservableList.add(totalTimeColumn);
+
+        searchInfoDtoTableView.getColumns().addAll(keywordInfoDtoObservableList);
+        hBox.getChildren().add(searchInfoDtoTableView);
+
+        final SearchInfoService searchInfoService = annotationConfigApplicationContext.getBean(SearchInfoService.class);
+        final List<SearchInfoDto> searchInfoDtoList = searchInfoService.findAllSearchInfos();
+        searchInfoDtoTableView.setItems(FXCollections.observableList(searchInfoDtoList));
+
+        tab2.setContent(hBox);
         return tab2;
     }
+
 
     private Tab getFirstTab() {
         final Tab tab = new Tab();
@@ -129,9 +163,12 @@ public class MainGui extends Application {
         table.setItems(getKeywordInfoObservableList(keywordInfoList));
 
         selectionColumn.setCellValueFactory(features -> new SimpleBooleanProperty(features.getValue() != null));
-        selectionColumn.setCellFactory(personBooleanTableColumn -> new KeywordCheckBoxCell(table));
+        selectionColumn.setCellFactory(personBooleanTableColumn -> new KeywordCheckBoxCell());
 
-        table.getColumns().addAll(selectionColumn, keywordColumn);
+        final List<TableColumn<KeywordInfoDto, ?>> tableColumnList = new ArrayList<>();
+        tableColumnList.add(selectionColumn);
+        tableColumnList.add(keywordColumn);
+        table.getColumns().addAll(tableColumnList);
         return table;
     }
 
@@ -163,7 +200,11 @@ public class MainGui extends Application {
         final List<SiteInfo> siteInfoList = siteInfoService.findAll();
         siteInfoTable.setItems(getSiteInfoObservableList(siteInfoList));
 
-        siteInfoTable.getColumns().addAll(selectionColumn, keywordColumn);
+        final List<TableColumn<SiteInfoDto, ?>> tableColumnList = new ArrayList<>();
+        tableColumnList.add(selectionColumn);
+        tableColumnList.add(keywordColumn);
+
+        siteInfoTable.getColumns().addAll(tableColumnList);
         return siteInfoTable;
     }
 
@@ -242,7 +283,6 @@ public class MainGui extends Application {
             searchThread.start();
         });
 
-
         clearButton.setOnAction(event -> clearButtonAction());
 
         grid.add(totalRecordLabel, 0, 1);
@@ -294,7 +334,7 @@ public class MainGui extends Application {
 
         final StackPane paddedButton = new StackPane();
 
-        KeywordCheckBoxCell(TableView<KeywordInfoDto> table) {
+        KeywordCheckBoxCell() {
             paddedButton.setPadding(new Insets(3));
             HBox vBox = new HBox();
             vBox.setSpacing(10);

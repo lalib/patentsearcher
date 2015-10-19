@@ -21,9 +21,6 @@ public class SearchInfo extends AbstractEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @OneToMany(targetEntity = KeywordInfo.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "searchInfo")
-    private List<KeywordInfo> keywordInfoList;
-
     @Column(name = "C_SEARCH_STATUS")
     @Enumerated(EnumType.STRING)
     private SearchInfoStatusType searchInfoStatusType = SearchInfoStatusType.NOT_FINISHED;
@@ -35,4 +32,7 @@ public class SearchInfo extends AbstractEntity {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "C_END_TIME")
     private Date endTime;
+
+    @OneToMany(targetEntity = PatentInfo.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "searchInfo")
+    private List<PatentInfo> patentInfoList;
 }
