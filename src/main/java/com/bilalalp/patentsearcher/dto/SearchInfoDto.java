@@ -1,6 +1,7 @@
 package com.bilalalp.patentsearcher.dto;
 
 import com.bilalalp.patentsearcher.entity.SearchInfoStatusType;
+import com.bilalalp.patentsearcher.util.DateUtil;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -27,7 +28,7 @@ public class SearchInfoDto {
     }
 
     public SearchInfoDto(Long id, SearchInfoStatusType state, Date searchDate, Long linkCount, Date startTime, Date endTime) {
-        this(id, state, "", linkCount, 0L);
+        this(id, state, DateUtil.dateToString(searchDate, DateUtil.DD_MM_YY_HH_MM_SS), linkCount, DateUtil.getDateDiff(startTime,endTime));
     }
 
     public long getLinkCount() {

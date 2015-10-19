@@ -4,9 +4,9 @@ import com.bilalalp.patentsearcher.business.searcher.SearcherService;
 import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
 import com.bilalalp.patentsearcher.dto.*;
 import com.bilalalp.patentsearcher.entity.KeywordInfo;
-import com.bilalalp.patentsearcher.entity.SearchInfo;
 import com.bilalalp.patentsearcher.entity.SiteInfo;
 import com.bilalalp.patentsearcher.service.keywordinfo.KeywordInfoService;
+import com.bilalalp.patentsearcher.service.patentinfo.PatentInfoService;
 import com.bilalalp.patentsearcher.service.searchinfo.SearchInfoService;
 import com.bilalalp.patentsearcher.service.siteinfo.SiteInfoService;
 import com.bilalalp.patentsearcher.util.GuiUtil;
@@ -18,6 +18,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -37,12 +38,19 @@ import java.util.stream.Collectors;
 public class MainGui extends Application {
 
     private final AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(PatentSearcherConfiguration.class);
+    private final PatentInfoService patentInfoService = annotationConfigApplicationContext.getBean(PatentInfoService.class);
 
     private UIInfoDto uiInfoDto = new UIInfoDto();
+    private ContentSearchDto contentSearchDto = new ContentSearchDto();
+
     private Label totalRecordCountLabel = new Label();
     private Label currentRecordCountLabel = new Label();
     private Label errorRecordCountLabel = new Label();
     private Label totalWaitTime = new Label();
+    private final Label totalLinkCount = new Label(contentSearchDto.getTotalLinkCount().toString());
+    private final Label analysiedLinkCount = new Label(contentSearchDto.getAnalysiedLinkCount().toString());
+    private final Label notAnalysiedLinkCount = new Label(contentSearchDto.getNotAnalysiedLinkCount().toString());
+
     private Label state = new Label("NOT YET");
     private TextArea textArea = new TextArea();
 
@@ -91,6 +99,34 @@ public class MainGui extends Application {
         final HBox hBox = new HBox();
         final TableView<SearchInfoDto> searchInfoDtoTableView = new TableView<>();
 
+        searchInfoDtoTableView.setOnMousePressed(event -> {
+            if (event.isPrimaryButtonDown() && event.getClickCount() == 2) {
+                Node node = ((Node) event.getTarget()).getParent();
+                TableRow row;
+                if (node instanceof TableRow) {
+                    row = (TableRow) node;
+                } else {
+                    row = (TableRow) node.getParent();
+                }
+
+                if (row.getItem() instanceof SearchInfoDto) {
+                    final SearchInfoDto selectedSearchInfoDto = (SearchInfoDto) row.getItem();
+                    final ContentSearchDto contentSearchDto = patentInfoService.getContentSearchDto(selectedSearchInfoDto.getId());
+
+                    this.contentSearchDto.setAnalysiedLinkCount(contentSearchDto.getAnalysiedLinkCount());
+                    this.contentSearchDto.setNotAnalysiedLinkCount(contentSearchDto.getNotAnalysiedLinkCount());
+                    this.contentSearchDto.setTotalLinkCount(contentSearchDto.getTotalLinkCount());
+                }
+            }
+        });
+
+        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> Platform.runLater(() -> {
+            this.totalLinkCount.setText(this.contentSearchDto.getTotalLinkCount().toString());
+            this.analysiedLinkCount.setText(this.contentSearchDto.getAnalysiedLinkCount().toString());
+            this.notAnalysiedLinkCount.setText(this.contentSearchDto.getNotAnalysiedLinkCount().toString());
+        }), 1, 1, TimeUnit.SECONDS);
+
         final TableColumn<SearchInfoDto, Long> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
 
@@ -113,17 +149,46 @@ public class MainGui extends Application {
         keywordInfoDtoObservableList.add(linkCountColumn);
         keywordInfoDtoObservableList.add(totalTimeColumn);
 
-        searchInfoDtoTableView.getColumns().addAll(keywordInfoDtoObservableList);
-        hBox.getChildren().add(searchInfoDtoTableView);
+        searchInfoDtoTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        searchInfoDtoTableView.setMinWidth(600);
 
         final SearchInfoService searchInfoService = annotationConfigApplicationContext.getBean(SearchInfoService.class);
         final List<SearchInfoDto> searchInfoDtoList = searchInfoService.findAllSearchInfos();
         searchInfoDtoTableView.setItems(FXCollections.observableList(searchInfoDtoList));
 
+        searchInfoDtoTableView.getColumns().addAll(keywordInfoDtoObservableList);
+        hBox.getChildren().add(searchInfoDtoTableView);
+
+        final VBox vBox = getVBox();
+
+        hBox.getChildren().add(vBox);
+
         tab2.setContent(hBox);
         return tab2;
     }
 
+    private VBox getVBox() {
+
+        final VBox vBox = new VBox();
+        final GridPane gridPane = new GridPane();
+        gridPane.setPadding(new Insets(20));
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+
+        final Label totalLink = new Label("Total Link Count : ");
+        final Label analysiedLink = new Label("Analysied Link Count : ");
+        final Label notAnalysiedLink = new Label("Not Analysied Link Count : ");
+
+        gridPane.add(totalLink, 0, 1);
+        gridPane.add(totalLinkCount, 1, 1);
+        gridPane.add(analysiedLink, 0, 2);
+        gridPane.add(analysiedLinkCount, 1, 2);
+        gridPane.add(notAnalysiedLink, 0, 3);
+        gridPane.add(notAnalysiedLinkCount, 1, 3);
+
+        vBox.getChildren().addAll(gridPane);
+        return vBox;
+    }
 
     private Tab getFirstTab() {
         final Tab tab = new Tab();
@@ -222,7 +287,6 @@ public class MainGui extends Application {
         Label errorRecordLabel = new Label("Error Record Count : ");
         Label totalWaitTimeLabel = new Label("Total Wait Time : ");
         Label stateLabel = new Label("State : ");
-
 
         stopButton.setDisable(true);
 

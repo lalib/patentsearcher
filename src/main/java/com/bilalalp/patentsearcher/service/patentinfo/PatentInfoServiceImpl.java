@@ -1,6 +1,7 @@
 package com.bilalalp.patentsearcher.service.patentinfo;
 
 import com.bilalalp.patentsearcher.dao.patentinfo.PatentInfoDao;
+import com.bilalalp.patentsearcher.dto.ContentSearchDto;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
 import com.bilalalp.patentsearcher.service.base.AbstractService;
 import lombok.Getter;
@@ -28,5 +29,21 @@ public class PatentInfoServiceImpl extends AbstractService<PatentInfo> implement
     public void persistWithNewTransaction(PatentInfo patentInfo) {
         persist(patentInfo);
         flush();
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
+    public ContentSearchDto getContentSearchDto(final Long searchInfoId) {
+
+        final Long analysiedLinkCount = patentInfoDao.getAnalysiedLinkCount(searchInfoId);
+        final Long notAnalysiedLinkCount = patentInfoDao.getNotAnalysiedLinkCount(searchInfoId);
+        final Long totalLinkCount = patentInfoDao.getTotalLinkCount(searchInfoId);
+
+        final ContentSearchDto contentSearchDto = new ContentSearchDto();
+        contentSearchDto.setAnalysiedLinkCount(analysiedLinkCount);
+        contentSearchDto.setNotAnalysiedLinkCount(notAnalysiedLinkCount);
+        contentSearchDto.setTotalLinkCount(totalLinkCount);
+
+        return contentSearchDto;
     }
 }

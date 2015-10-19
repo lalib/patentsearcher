@@ -41,6 +41,10 @@ public class PatentInfo extends AbstractEntity {
     @Column(name = "C_SEARCH_LINK")
     private String searchLink;
 
+    @Column(name = "C_CONTENT_STATUS_TYPE")
+    @Enumerated(EnumType.STRING)
+    private ContentSearchInfoStatusType contentSearchInfoStatusType = ContentSearchInfoStatusType.NOT_ANALYSIED;
+
     @ManyToOne(targetEntity = SiteInfo.class, fetch = FetchType.LAZY)
     @JoinColumn(name = SiteInfo.JOIN_COLUMN)
     private SiteInfo siteInfo;
