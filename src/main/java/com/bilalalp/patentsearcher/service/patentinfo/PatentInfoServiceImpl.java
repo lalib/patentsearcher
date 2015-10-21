@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Service
@@ -45,5 +47,11 @@ public class PatentInfoServiceImpl extends AbstractService<PatentInfo> implement
         contentSearchDto.setTotalLinkCount(totalLinkCount);
 
         return contentSearchDto;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
+    public List<PatentInfo> getPatentInfoListBySearchInfoId(Long searchInfoId) {
+        return patentInfoDao.getPatentInfoListBySearchInfoId(searchInfoId);
     }
 }

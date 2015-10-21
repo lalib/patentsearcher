@@ -61,6 +61,10 @@ public class MainGui extends Application {
     private Button stopButton = new Button("Stop");
     private Button clearButton = new Button("Clear");
 
+    final CheckBox abstractCheckBox = new CheckBox("Abstract");
+    final CheckBox descriptionCheckBox = new CheckBox("Description");
+    final CheckBox claimCheckBox = new CheckBox("Claim");
+
     private Thread searchThread = new Thread();
 
     @Override
@@ -101,7 +105,7 @@ public class MainGui extends Application {
 
         searchInfoDtoTableView.setOnMousePressed(event -> {
             if (event.isPrimaryButtonDown() && event.getClickCount() == 2) {
-                Node node = ((Node) event.getTarget()).getParent();
+                final Node node = ((Node) event.getTarget()).getParent();
                 TableRow row;
                 if (node instanceof TableRow) {
                     row = (TableRow) node;
@@ -116,16 +120,13 @@ public class MainGui extends Application {
                     this.contentSearchDto.setAnalysiedLinkCount(contentSearchDto.getAnalysiedLinkCount());
                     this.contentSearchDto.setNotAnalysiedLinkCount(contentSearchDto.getNotAnalysiedLinkCount());
                     this.contentSearchDto.setTotalLinkCount(contentSearchDto.getTotalLinkCount());
+                    setActualValues();
                 }
             }
         });
 
         final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(() -> Platform.runLater(() -> {
-            this.totalLinkCount.setText(this.contentSearchDto.getTotalLinkCount().toString());
-            this.analysiedLinkCount.setText(this.contentSearchDto.getAnalysiedLinkCount().toString());
-            this.notAnalysiedLinkCount.setText(this.contentSearchDto.getNotAnalysiedLinkCount().toString());
-        }), 1, 1, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(() -> Platform.runLater(this::setActualValues), 1, 1, TimeUnit.SECONDS);
 
         final TableColumn<SearchInfoDto, Long> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -167,6 +168,12 @@ public class MainGui extends Application {
         return tab2;
     }
 
+    private void setActualValues() {
+        this.totalLinkCount.setText(this.contentSearchDto.getTotalLinkCount().toString());
+        this.analysiedLinkCount.setText(this.contentSearchDto.getAnalysiedLinkCount().toString());
+        this.notAnalysiedLinkCount.setText(this.contentSearchDto.getNotAnalysiedLinkCount().toString());
+    }
+
     private VBox getVBox() {
 
         final VBox vBox = new VBox();
@@ -181,10 +188,13 @@ public class MainGui extends Application {
 
         gridPane.add(totalLink, 0, 1);
         gridPane.add(totalLinkCount, 1, 1);
+        gridPane.add(abstractCheckBox, 2, 1);
         gridPane.add(analysiedLink, 0, 2);
         gridPane.add(analysiedLinkCount, 1, 2);
+        gridPane.add(descriptionCheckBox, 2, 2);
         gridPane.add(notAnalysiedLink, 0, 3);
         gridPane.add(notAnalysiedLinkCount, 1, 3);
+        gridPane.add(claimCheckBox, 2, 3);
 
         vBox.getChildren().addAll(gridPane);
         return vBox;

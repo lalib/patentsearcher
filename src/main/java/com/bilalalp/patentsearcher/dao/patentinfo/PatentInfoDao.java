@@ -4,6 +4,8 @@ import com.bilalalp.patentsearcher.dao.base.Dao;
 import com.bilalalp.patentsearcher.dto.ContentSearchDto;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
 
+import java.util.List;
+
 public interface PatentInfoDao extends Dao<PatentInfo> {
 
     Long getTotalLinkCount(Long searchInfoId);
@@ -11,4 +13,6 @@ public interface PatentInfoDao extends Dao<PatentInfo> {
     Long getAnalysiedLinkCount(Long searchInfoId);
 
     Long getNotAnalysiedLinkCount(Long searchId);
+
+    List<PatentInfo> getPatentInfoListBySearchInfoId(Long searchInfoId);
 }

@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Repository
 public class PatentInfoDaoImpl extends AbstractDao<PatentInfo> implements PatentInfoDao {
 
@@ -30,6 +32,15 @@ public class PatentInfoDaoImpl extends AbstractDao<PatentInfo> implements Patent
     @Transactional(propagation = Propagation.SUPPORTS)
     public Long getNotAnalysiedLinkCount(Long searchId) {
         return getLinkCountByContentSearchInfoType(searchId, ContentSearchInfoStatusType.NOT_ANALYSIED);
+    }
+
+    @Override
+    public List<PatentInfo> getPatentInfoListBySearchInfoId(final Long searchInfoId) {
+
+        return getEntityManager()
+                .createQuery("Select p from PatentInfo p where p.searchInfo.id=:id")
+                .setParameter("id",searchInfoId)
+                .getResultList();
     }
 
     @Transactional(propagation = Propagation.SUPPORTS)
