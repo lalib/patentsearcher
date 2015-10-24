@@ -9,6 +9,8 @@ import java.util.Date;
 
 public class SearchInfoDto {
 
+    private Boolean selected = Boolean.FALSE;
+
     private final SimpleLongProperty id;
 
     private final SimpleStringProperty state;
@@ -50,5 +52,13 @@ public class SearchInfoDto {
 
     public long getTotalTime() {
         return totalTime.get();
+    }
+
+    public Boolean getSelected() {
+        return selected;
+    }
+
+    public void setSelected(Boolean selected) {
+        this.selected = selected;
     }
 }

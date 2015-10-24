@@ -49,7 +49,7 @@ public class PatentInfoDaoImpl extends AbstractDao<PatentInfo> implements Patent
     public Long getAbstractCount(final Long searchInfoId) {
 
         return (Long) getEntityManager()
-                .createQuery("SELECT COUNT(p) FROM PatentInfo p WHERE p.searchInfo.id =:id")
+                .createQuery("SELECT COUNT(p) FROM PatentInfo p WHERE p.searchInfo.id =:id AND p.abstractContent IS NOT NULL")
                 .setParameter("id", searchInfoId)
                 .getSingleResult();
     }

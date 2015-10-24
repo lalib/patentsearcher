@@ -13,6 +13,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
@@ -34,10 +35,11 @@ public class PatentScopeContentParserServiceImpl implements PatentContentParserS
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void getPatentContents(final PatentInfo patentInfo, final ConfigDto configDto) {
 
-        final String patentLink = patentInfo.getPatentLink();
+        final PatentInfo tempPatentInfo = patentInfoService.findById(patentInfo.getId());
+        final String patentLink = tempPatentInfo.getPatentLink();
         configDto.getCrawlingDto().setCurrentLink(patentLink);
 
         final Element body = JSoupUtil.getBody(patentLink, configDto.getWaitingEnum(),configDto.getCrawlingDto());
@@ -48,14 +50,14 @@ public class PatentScopeContentParserServiceImpl implements PatentContentParserS
             if (Boolean.TRUE.equals(configDto.getCrawlAbstract())) {
                 final String abstractContent = getAbstractContent(body);
                 if (StringUtils.isNotEmpty(abstractContent)) {
-                    patentInfo.setAbstractContent(abstractContent);
+                    tempPatentInfo.setAbstractContent(abstractContent);
                     anyChange = true;
                 }
             }
 
             if (anyChange) {
-                patentInfo.setContentSearchInfoStatusType(ContentSearchInfoStatusType.ANALYSIED);
-                patentInfoService.update(patentInfo);
+                tempPatentInfo.setContentSearchInfoStatusType(ContentSearchInfoStatusType.ANALYSIED);
+                patentInfoService.update(tempPatentInfo);
             }
         }
     }

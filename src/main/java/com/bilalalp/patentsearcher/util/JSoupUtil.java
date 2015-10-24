@@ -5,6 +5,7 @@ import com.bilalalp.patentsearcher.dto.CrawlingDto;
 import com.bilalalp.patentsearcher.dto.UIInfoDto;
 import com.bilalalp.patentsearcher.dto.WaitingEnum;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 public class JSoupUtil {
@@ -15,7 +16,8 @@ public class JSoupUtil {
         while (true) {
 
             try {
-                return Jsoup.connect(patentLink).timeout(PatentSearcherConstant.TIMEOUT).get().body();
+                final Document document = Jsoup.connect(patentLink).timeout(PatentSearcherConstant.TIMEOUT).get();
+                return document.body();
 
             } catch (Exception e) {
 

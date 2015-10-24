@@ -61,18 +61,25 @@ public class MainGui extends Application {
 
     private final Label crawlingTotalWaitTime = new Label();
     private final Label crawlingTotalErrorCount = new Label();
+    private final Label siteId = new Label();
 
     private Label state = new Label("NOT YET");
     private Label stateOfCrawling = new Label("NOT YET");
-    private TextArea textArea = new TextArea();
+    private final TextArea textArea = new TextArea();
+    private final TextArea crawledLinkTextArea = new TextArea();
 
     private TableView<KeywordInfoDto> table = new TableView<>();
     private TableView<SiteInfoDto> siteInfoDtoTableView = new TableView<>();
-    final TableView<SearchInfoDto> searchInfoDtoTableView = new TableView<>();
+    private final TableView<SearchInfoDto> searchInfoDtoTableView = new TableView<>();
+    private final TableView<SearchInfoDto> analyseInfoTableView = new TableView<>();
+    private final TableView<SiteInfoDto> siteInfoTable = new TableView<>();
+    private final TableView<KeywordInfoDto> keywordInfoTable = new TableView<>();
 
-    private Button startButton = new Button("Start");
-    private Button stopButton = new Button("Stop");
-    private Button clearButton = new Button("Clear");
+    private final Button startButton = new Button("Start");
+    private final Button stopButton = new Button("Stop");
+    private final Button clearButton = new Button("Clear");
+    private final Button crawlStartButton = new Button("Start");
+    private final Button crawlStopButton = new Button("Stop");
 
     final CheckBox abstractCheckBox = new CheckBox("Abstract");
     final CheckBox descriptionCheckBox = new CheckBox("Description");
@@ -90,13 +97,13 @@ public class MainGui extends Application {
         Scene scene = new Scene(root, 1200, 600, Color.WHITE);
 
         TabPane tabPane = new TabPane();
-
         BorderPane borderPane = new BorderPane();
 
         Tab tab = getFirstTab();
-
         Tab tab2 = getSecondTab();
-        tabPane.getTabs().addAll(tab, tab2);
+        Tab tab3 = getThirdTab();
+
+        tabPane.getTabs().addAll(tab, tab2, tab3);
 
         borderPane.prefHeightProperty().bind(scene.heightProperty());
         borderPane.prefWidthProperty().bind(scene.widthProperty());
@@ -113,6 +120,14 @@ public class MainGui extends Application {
         Tab tab2 = new Tab();
         tab2.setClosable(false);
         tab2.setText("Content Search");
+
+        tab2.setOnSelectionChanged(event1 -> {
+
+            final Tab tab = (Tab) event1.getSource();
+            if (tab.isSelected()) {
+                fillSearchInfoTableForCrawlTab();
+            }
+        });
 
         final HBox hBox = new HBox();
 
@@ -133,6 +148,7 @@ public class MainGui extends Application {
                     this.contentSearchDto.setAnalysiedLinkCount(contentSearchDto.getAnalysiedLinkCount());
                     this.contentSearchDto.setNotAnalysiedLinkCount(contentSearchDto.getNotAnalysiedLinkCount());
                     this.contentSearchDto.setTotalLinkCount(contentSearchDto.getTotalLinkCount());
+                    this.contentSearchDto.setAbstractCount(contentSearchDto.getAbstractCount());
                     setActualValues();
                 }
             }
@@ -166,9 +182,7 @@ public class MainGui extends Application {
         searchInfoDtoTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         searchInfoDtoTableView.setMinWidth(600);
 
-        final SearchInfoService searchInfoService = annotationConfigApplicationContext.getBean(SearchInfoService.class);
-        final List<SearchInfoDto> searchInfoDtoList = searchInfoService.findAllSearchInfos();
-        searchInfoDtoTableView.setItems(FXCollections.observableList(searchInfoDtoList));
+        fillSearchInfoTableForCrawlTab();
 
         searchInfoDtoTableView.getColumns().addAll(keywordInfoDtoObservableList);
         hBox.getChildren().add(searchInfoDtoTableView);
@@ -181,13 +195,27 @@ public class MainGui extends Application {
         return tab2;
     }
 
+    private void fillSearchInfoTableForCrawlTab() {
+        final List<SearchInfoDto> searchInfoDtoList = getSearchInfoDtos();
+        searchInfoDtoTableView.setItems(FXCollections.observableList(searchInfoDtoList));
+    }
+
+    private List<SearchInfoDto> getSearchInfoDtos() {
+        final SearchInfoService searchInfoService = annotationConfigApplicationContext.getBean(SearchInfoService.class);
+        return searchInfoService.findAllSearchInfos();
+    }
+
     private void setActualValues() {
         this.totalLinkCount.setText(this.contentSearchDto.getTotalLinkCount().toString());
         this.analysiedLinkCount.setText(this.contentSearchDto.getAnalysiedLinkCount().toString());
         this.notAnalysiedLinkCount.setText(this.contentSearchDto.getNotAnalysiedLinkCount().toString());
+        this.abstractCount.setText(this.contentSearchDto.getAbstractCount().toString());
     }
 
     private VBox getVBox() {
+
+        crawledLinkTextArea.setEditable(false);
+        crawledLinkTextArea.setWrapText(true);
 
         final VBox vBox = new VBox();
         final GridPane gridPane = new GridPane();
@@ -200,13 +228,11 @@ public class MainGui extends Application {
         final Label notAnalysiedLink = new Label("Not Analysied Link Count : ");
         final Label crawlingErrorCountLabel = new Label("Error Count : ");
         final Label crawlingTotalWaitingTime = new Label("Error Waiting Time : ");
-        final Button startButton = new Button("Start");
-        final Button stopButton = new Button("Stop");
-
+        final Label siteIdLabel = new Label("Search Id : ");
 
         final Label crawledCountLabel = new Label("Current Count : ");
 
-        startButton.setOnAction(event -> {
+        crawlStartButton.setOnAction(event -> {
             stateOfCrawling.setText("NOT YET");
             configDto.setCrawlingDto(new CrawlingDto());
             final SearchInfoDto searchInfoDto = searchInfoDtoTableView.getSelectionModel().getSelectedItem();
@@ -214,7 +240,12 @@ public class MainGui extends Application {
             crawlThread.start();
         });
 
-        stopButton.setOnAction(event -> crawlThread.stop());
+        crawlStopButton.setDisable(true);
+        crawlStopButton.setOnAction(event -> {
+            crawlThread.stop();
+            crawlStopButton.setDisable(true);
+            crawlStartButton.setDisable(false);
+        });
 
         final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(() -> Platform.runLater(() -> {
@@ -222,39 +253,55 @@ public class MainGui extends Application {
             crawledCount.setText(configDto.getCrawlingDto().getCrawlCount().toString());
             crawlingTotalWaitTime.setText(configDto.getCrawlingDto().getTotalWaitTime().toString());
             crawlingTotalErrorCount.setText(configDto.getCrawlingDto().getErrorCount().toString());
-            ;
+            crawledLinkTextArea.setText(configDto.getCrawlingDto().getCurrentLink());
 
-        }), 1, 1, TimeUnit.SECONDS);
+        }), 1, 1, TimeUnit.MILLISECONDS);
 
-        gridPane.add(totalLink, 0, 1);
-        gridPane.add(totalLinkCount, 1, 1);
-        gridPane.add(abstractCheckBox, 2, 1);
-        gridPane.add(analysiedLink, 0, 2);
-        gridPane.add(analysiedLinkCount, 1, 2);
-        gridPane.add(descriptionCheckBox, 2, 2);
-        gridPane.add(notAnalysiedLink, 0, 3);
-        gridPane.add(notAnalysiedLinkCount, 1, 3);
-        gridPane.add(claimCheckBox, 2, 3);
+        gridPane.add(siteIdLabel, 0, 1);
+        gridPane.add(siteId, 1, 1);
 
-        gridPane.add(startButton, 1, 4);
-        gridPane.add(stopButton, 2, 4);
+        gridPane.add(totalLink, 0, 2);
+        gridPane.add(totalLinkCount, 1, 2);
+        gridPane.add(abstractCheckBox, 2, 2);
+        gridPane.add(analysiedLink, 0, 3);
+        gridPane.add(analysiedLinkCount, 1, 3);
+        gridPane.add(descriptionCheckBox, 2, 3);
+        gridPane.add(notAnalysiedLink, 0, 4);
+        gridPane.add(notAnalysiedLinkCount, 1, 4);
+        gridPane.add(claimCheckBox, 2, 4);
+        gridPane.add(abstractCountLabel, 0, 5);
+        gridPane.add(abstractCount, 1, 5);
 
-        gridPane.add(crawledCountLabel, 0, 6);
-        gridPane.add(crawledCount, 1, 6);
-        gridPane.add(crawlingErrorCountLabel, 0, 7);
-        gridPane.add(crawlingTotalErrorCount, 1, 7);
-        gridPane.add(crawlingTotalWaitingTime, 0, 8);
-        gridPane.add(crawlingTotalWaitTime, 1, 8);
+        final HBox hBox = new HBox();
+        hBox.getChildren().addAll(crawlStartButton, crawlStopButton);
+        gridPane.add(hBox, 2, 5);
 
-        gridPane.add(stateLabel, 0, 9);
-        gridPane.add(stateOfCrawling, 1, 9);
+        gridPane.add(crawledCountLabel, 0, 7);
+        gridPane.add(crawledCount, 1, 7);
+        gridPane.add(crawlingErrorCountLabel, 0, 8);
+        gridPane.add(crawlingTotalErrorCount, 1, 8);
+        gridPane.add(crawlingTotalWaitingTime, 0, 9);
+        gridPane.add(crawlingTotalWaitTime, 1, 9);
 
-        vBox.getChildren().addAll(gridPane);
+        gridPane.add(stateLabel, 0, 10);
+        gridPane.add(stateOfCrawling, 1, 10);
+
+        Label linkOutOut = new Label("Link Output : ");
+        vBox.getChildren().addAll(gridPane, linkOutOut, crawledLinkTextArea);
         return vBox;
     }
 
     private Tab getFirstTab() {
         final Tab tab = new Tab();
+        tab.setOnSelectionChanged(event -> {
+            final Tab tab1 = (Tab) event.getSource();
+
+            if (tab1.isSelected()) {
+                loadSiteInfos();
+                fillKeywordInfoTable();
+            }
+        });
+
         tab.setClosable(false);
         tab.setText("Link Search");
 
@@ -279,16 +326,13 @@ public class MainGui extends Application {
     }
 
     private TableView<KeywordInfoDto> getKeywordTable() {
-        TableView<KeywordInfoDto> table = new TableView<>();
-        table.setMaxWidth(260);
+        keywordInfoTable.setMaxWidth(260);
         TableColumn<KeywordInfoDto, String> keywordColumn = new TableColumn<>("Keyword");
         TableColumn<KeywordInfoDto, Boolean> selectionColumn = new TableColumn<>();
         keywordColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
         keywordColumn.setMinWidth(200);
 
-        final KeywordInfoService keywordInfoService = annotationConfigApplicationContext.getBean(KeywordInfoService.class);
-        final List<KeywordInfo> keywordInfoList = keywordInfoService.findAll();
-        table.setItems(getKeywordInfoObservableList(keywordInfoList));
+        fillKeywordInfoTable();
 
         selectionColumn.setCellValueFactory(features -> new SimpleBooleanProperty(features.getValue() != null));
         selectionColumn.setCellFactory(personBooleanTableColumn -> new KeywordCheckBoxCell());
@@ -296,18 +340,24 @@ public class MainGui extends Application {
         final List<TableColumn<KeywordInfoDto, ?>> tableColumnList = new ArrayList<>();
         tableColumnList.add(selectionColumn);
         tableColumnList.add(keywordColumn);
-        table.getColumns().addAll(tableColumnList);
-        return table;
+        keywordInfoTable.getColumns().addAll(tableColumnList);
+        return keywordInfoTable;
     }
 
-    private ObservableList<KeywordInfoDto> getKeywordInfoObservableList(List<KeywordInfo> keywordInfoList) {
+    private void fillKeywordInfoTable() {
+        final KeywordInfoService keywordInfoService = annotationConfigApplicationContext.getBean(KeywordInfoService.class);
+        final List<KeywordInfo> keywordInfoList = keywordInfoService.findAll();
+        keywordInfoTable.setItems(getKeywordInfoObservableList(keywordInfoList));
+    }
+
+    private ObservableList<KeywordInfoDto> getKeywordInfoObservableList(final List<KeywordInfo> keywordInfoList) {
 
         final ObservableList<KeywordInfoDto> keywordInfoDtoObservableList = FXCollections.observableArrayList();
         keywordInfoDtoObservableList.addAll(keywordInfoList.stream().map(keywordInfo -> new KeywordInfoDto(keywordInfo.getId(), keywordInfo.getKeyword())).collect(Collectors.toList()));
         return keywordInfoDtoObservableList;
     }
 
-    private ObservableList<SiteInfoDto> getSiteInfoObservableList(List<SiteInfo> keywordInfoList) {
+    private ObservableList<SiteInfoDto> getSiteInfoObservableList(final List<SiteInfo> keywordInfoList) {
 
         final ObservableList<SiteInfoDto> keywordInfoDtoObservableList = FXCollections.observableArrayList();
         keywordInfoDtoObservableList.addAll(keywordInfoList.stream().map(keywordInfo -> new SiteInfoDto(keywordInfo.getId(), keywordInfo.getSiteName(), keywordInfo.getSiteAddres())).collect(Collectors.toList()));
@@ -316,7 +366,6 @@ public class MainGui extends Application {
 
     public TableView<SiteInfoDto> getSiteInfoTable() {
 
-        TableView<SiteInfoDto> siteInfoTable = new TableView<>();
         siteInfoTable.setMaxWidth(260);
 
         TableColumn<SiteInfoDto, String> keywordColumn = new TableColumn<>("Site Name");
@@ -324,9 +373,7 @@ public class MainGui extends Application {
         keywordColumn.setCellValueFactory(new PropertyValueFactory<>("siteName"));
         keywordColumn.setMinWidth(200);
 
-        final SiteInfoService siteInfoService = annotationConfigApplicationContext.getBean(SiteInfoService.class);
-        final List<SiteInfo> siteInfoList = siteInfoService.findAll();
-        siteInfoTable.setItems(getSiteInfoObservableList(siteInfoList));
+        loadSiteInfos();
 
         final List<TableColumn<SiteInfoDto, ?>> tableColumnList = new ArrayList<>();
         tableColumnList.add(selectionColumn);
@@ -334,6 +381,12 @@ public class MainGui extends Application {
 
         siteInfoTable.getColumns().addAll(tableColumnList);
         return siteInfoTable;
+    }
+
+    private void loadSiteInfos() {
+        final SiteInfoService siteInfoService = annotationConfigApplicationContext.getBean(SiteInfoService.class);
+        final List<SiteInfo> siteInfoList = siteInfoService.findAll();
+        siteInfoTable.setItems(getSiteInfoObservableList(siteInfoList));
     }
 
     public GridPane getCenterOfFirstTab() {
@@ -440,7 +493,7 @@ public class MainGui extends Application {
         stopButton.setDisable(true);
     }
 
-    private Runnable startSearchAsANewThread(SearchingDto searchingDto) {
+    private Runnable startSearchAsANewThread(final SearchingDto searchingDto) {
         return () -> {
 
             final SearcherService patentScopePatentSearcherService = annotationConfigApplicationContext.getBean(SearcherService.class);
@@ -458,12 +511,58 @@ public class MainGui extends Application {
 
     private Runnable startCrawlingAsANewThread(final SearchInfoDto searchInfoDto) {
         return () -> {
+            crawlStopButton.setDisable(false);
+            crawlStartButton.setDisable(true);
+            Platform.runLater(() -> siteId.setText(String.valueOf(searchInfoDto.getId())));
             configDto.setCrawlAbstract(abstractCheckBox.isSelected());
             configDto.setCrawlClaim(claimCheckBox.isSelected());
             configDto.setCrawlDescription(descriptionCheckBox.isSelected());
             parserService.crawl(searchInfoDto, configDto);
             Platform.runLater(() -> stateOfCrawling.setText("FINISHED"));
+            crawlStopButton.setDisable(true);
+            crawlStartButton.setDisable(false);
         };
+    }
+
+    public Tab getThirdTab() {
+        final Tab thirdTab = new Tab();
+        thirdTab.setText("Content Analyse");
+        thirdTab.setClosable(false);
+
+        final TableColumn<SearchInfoDto, Boolean> selectionColumn = new TableColumn<>();
+        selectionColumn.setMaxWidth(150);
+        selectionColumn.setCellValueFactory(features -> new SimpleBooleanProperty(features.getValue() != null));
+        selectionColumn.setCellFactory(personBooleanTableColumn -> new SearchInfoDtoCheckBoxCell());
+
+        final TableColumn<SearchInfoDto, Long> idColumn = new TableColumn<>("ID");
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+
+        final TableColumn<SearchInfoDto, String> dateColumn = new TableColumn<>("Search Date");
+        dateColumn.setCellValueFactory(new PropertyValueFactory<>("searchDate"));
+
+        final TableColumn<SearchInfoDto, String> stateColumn = new TableColumn<>("State");
+        stateColumn.setCellValueFactory(new PropertyValueFactory<>("state"));
+
+        final TableColumn<SearchInfoDto, Long> linkCountColumn = new TableColumn<>("Total Link");
+        linkCountColumn.setCellValueFactory(new PropertyValueFactory<>("linkCount"));
+
+        final List<TableColumn<SearchInfoDto, ?>> keywordInfoDtoObservableList = new ArrayList<>();
+        keywordInfoDtoObservableList.add(selectionColumn);
+        keywordInfoDtoObservableList.add(idColumn);
+        keywordInfoDtoObservableList.add(dateColumn);
+        keywordInfoDtoObservableList.add(stateColumn);
+        keywordInfoDtoObservableList.add(linkCountColumn);
+
+        final List<SearchInfoDto> searchInfoDtoList = getSearchInfoDtos();
+        analyseInfoTableView.setItems(FXCollections.observableList(searchInfoDtoList));
+
+        analyseInfoTableView.getColumns().addAll(keywordInfoDtoObservableList);
+        HBox hBox = new HBox();
+        hBox.getChildren().add(analyseInfoTableView);
+
+        thirdTab.setContent(hBox);
+
+        return thirdTab;
     }
 
     private class KeywordCheckBoxCell extends TableCell<KeywordInfoDto, Boolean> {
@@ -489,7 +588,41 @@ public class MainGui extends Application {
         }
 
         @Override
-        protected void updateItem(Boolean item, boolean empty) {
+        protected void updateItem(final Boolean item, final boolean empty) {
+            super.updateItem(item, empty);
+            if (!empty) {
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                setGraphic(paddedButton);
+            } else {
+                setGraphic(null);
+            }
+        }
+    }
+
+    private class SearchInfoDtoCheckBoxCell extends TableCell<SearchInfoDto, Boolean> {
+        final CheckBox deleteButton = new CheckBox();
+
+        final StackPane paddedButton = new StackPane();
+
+        SearchInfoDtoCheckBoxCell() {
+            paddedButton.setPadding(new Insets(3));
+            HBox vBox = new HBox();
+            vBox.setSpacing(10);
+            vBox.getChildren().addAll(deleteButton);
+            paddedButton.getChildren().add(vBox);
+
+            deleteButton.setOnAction(actionEvent -> {
+                final Object item = getTableRow().getItem();
+
+                if (item != null && item instanceof SearchInfoDto) {
+                    final SearchInfoDto searchInfoDto = (SearchInfoDto) item;
+                    searchInfoDto.setSelected(deleteButton.isSelected());
+                }
+            });
+        }
+
+        @Override
+        protected void updateItem(final Boolean item, final boolean empty) {
             super.updateItem(item, empty);
             if (!empty) {
                 setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
