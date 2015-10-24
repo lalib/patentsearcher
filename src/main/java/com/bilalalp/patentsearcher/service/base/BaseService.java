@@ -9,6 +9,8 @@ public interface BaseService<E extends AbstractEntity> {
 
     void persist(E entity);
 
+    void persist(List<E> entityList);
+
     List<E> findAll();
 
     E findById(Long id);

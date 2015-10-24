@@ -40,6 +40,15 @@ public abstract class AbstractDao<E extends AbstractEntity> implements Dao<E> {
     }
 
     @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void persist(final List<E> entityList) {
+
+        for (final E e : entityList) {
+            persist(e);
+        }
+    }
+
+    @Override
     @Transactional(propagation = Propagation.SUPPORTS)
     public List<E> findAll() {
 

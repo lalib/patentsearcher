@@ -3,7 +3,10 @@ package com.bilalalp.patentsearcher.business.analyser;
 import com.bilalalp.patentsearcher.dto.AnalyseDto;
 import com.bilalalp.patentsearcher.dto.ConfigDto;
 import com.bilalalp.patentsearcher.dto.SearchInfoDto;
+import com.bilalalp.patentsearcher.entity.ContentType;
+import com.bilalalp.patentsearcher.entity.ParsedKeywordInfo;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
+import com.bilalalp.patentsearcher.service.parsedkeywordinfo.ParsedKeywordInfoService;
 import com.bilalalp.patentsearcher.service.patentinfo.PatentInfoService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,9 @@ import java.util.stream.Collectors;
 public class PatentAnalyser {
 
     @Autowired
+    private ParsedKeywordInfoService parsedKeywordInfoService;
+
+    @Autowired
     private PatentInfoService patentInfoService;
 
     @Transactional
@@ -32,20 +38,18 @@ public class PatentAnalyser {
         for (final PatentInfo patentInfo : patentInfoList) {
             analyseDto.setCurrentCount(analyseDto.getCurrentCount() + 1);
 
-            boolean change = false;
-
             final String abstractContent = patentInfo.getAbstractContent();
             final ConfigDto configDto = analyseDto.getConfigDto();
 
             if (Boolean.TRUE.equals(configDto.getCrawlAbstract()) && StringUtils.isNotEmpty(abstractContent)) {
 
                 final List<String> analysedAbstractContentList = analyse(abstractContent);
-                patentInfo.setAbstractContentWordList(analysedAbstractContentList);
-                change = true;
-            }
+                final List<ParsedKeywordInfo> parsedKeywordInfoList = analysedAbstractContentList.stream()
+                        .map(k -> new ParsedKeywordInfo(k, ContentType.ABSTRACT, patentInfo))
+                        .collect(Collectors.toList());
 
-            if (change) {
-                patentInfoService.update(patentInfo);
+                parsedKeywordInfoService.removeAllAbstractKeywordsWithNewTransaction(patentInfo.getId());
+                parsedKeywordInfoService.persistWithNewTransaction(parsedKeywordInfoList);
             }
         }
     }

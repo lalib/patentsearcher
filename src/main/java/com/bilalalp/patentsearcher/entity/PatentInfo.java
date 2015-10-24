@@ -54,10 +54,4 @@ public class PatentInfo extends AbstractEntity {
     @JoinColumn(name = SearchInfo.JOIN_COLUMN)
     private SearchInfo searchInfo;
 
-    @ElementCollection
-    private List<String> abstractContentWordList;
-
-    @ElementCollection
-    private List<String> claimContentWordList;
-
 }

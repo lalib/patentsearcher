@@ -5,9 +5,11 @@ import com.bilalalp.patentsearcher.business.parser.ParserService;
 import com.bilalalp.patentsearcher.business.searcher.SearcherService;
 import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
 import com.bilalalp.patentsearcher.dto.*;
+import com.bilalalp.patentsearcher.entity.ContentType;
 import com.bilalalp.patentsearcher.entity.KeywordInfo;
 import com.bilalalp.patentsearcher.entity.SiteInfo;
 import com.bilalalp.patentsearcher.service.keywordinfo.KeywordInfoService;
+import com.bilalalp.patentsearcher.service.parsedkeywordinfo.ParsedKeywordInfoService;
 import com.bilalalp.patentsearcher.service.patentinfo.PatentInfoService;
 import com.bilalalp.patentsearcher.service.searchinfo.SearchInfoService;
 import com.bilalalp.patentsearcher.service.siteinfo.SiteInfoService;
@@ -43,6 +45,7 @@ public class MainGui extends Application {
     private final PatentInfoService patentInfoService = annotationConfigApplicationContext.getBean(PatentInfoService.class);
     private final ParserService parserService = annotationConfigApplicationContext.getBean(ParserService.class);
     private final PatentAnalyser patentAnalyser = annotationConfigApplicationContext.getBean(PatentAnalyser.class);
+    private final ParsedKeywordInfoService parsedKeywordInfoService = annotationConfigApplicationContext.getBean(ParsedKeywordInfoService.class);
 
     private UIInfoDto uiInfoDto = new UIInfoDto();
     private ContentSearchDto contentSearchDto = new ContentSearchDto();
@@ -94,6 +97,10 @@ public class MainGui extends Application {
     final CheckBox abstractCheckBox = new CheckBox("Abstract");
     final CheckBox descriptionCheckBox = new CheckBox("Description");
     final CheckBox claimCheckBox = new CheckBox("Claim");
+
+    final CheckBox analyseAbstractCheckBox = new CheckBox("Abstract");
+    final CheckBox analyseClaimCheckBox = new CheckBox("Claim");
+    final CheckBox analyseDescriptionCheckBox = new CheckBox("Description");
 
     private Thread searchThread = new Thread();
     private Thread crawlThread = new Thread();
@@ -296,7 +303,7 @@ public class MainGui extends Application {
         gridPane.add(stateLabel, 0, 10);
         gridPane.add(stateOfCrawling, 1, 10);
 
-        Label linkOutOut = new Label("Link Output : ");
+        final Label linkOutOut = new Label("Link Output : ");
         vBox.getChildren().addAll(gridPane, linkOutOut, crawledLinkTextArea);
         return vBox;
     }
@@ -308,7 +315,7 @@ public class MainGui extends Application {
 
             if (tab1.isSelected()) {
                 loadSiteInfos();
-                fillKeywordInfoTable();
+                table.setItems(getKeywordInfoObservableList(fillKeywordInfoTable()));
             }
         });
 
@@ -317,6 +324,7 @@ public class MainGui extends Application {
 
         final BorderPane tab1BorderPane = new BorderPane();
         table = getKeywordTable();
+        table.setItems(getKeywordInfoObservableList(fillKeywordInfoTable()));
         siteInfoDtoTableView = getSiteInfoTable();
 
         final GridPane gridPane = getCenterOfFirstTab();
@@ -336,13 +344,13 @@ public class MainGui extends Application {
     }
 
     private TableView<KeywordInfoDto> getKeywordTable() {
-        keywordInfoTable.setMaxWidth(260);
+        final TableView<KeywordInfoDto> keywordInfoDtoTableView = new TableView<>();
+
+        keywordInfoDtoTableView.setMaxWidth(260);
         TableColumn<KeywordInfoDto, String> keywordColumn = new TableColumn<>("Keyword");
         TableColumn<KeywordInfoDto, Boolean> selectionColumn = new TableColumn<>();
         keywordColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
         keywordColumn.setMinWidth(200);
-
-        fillKeywordInfoTable();
 
         selectionColumn.setCellValueFactory(features -> new SimpleBooleanProperty(features.getValue() != null));
         selectionColumn.setCellFactory(personBooleanTableColumn -> new KeywordCheckBoxCell());
@@ -350,14 +358,13 @@ public class MainGui extends Application {
         final List<TableColumn<KeywordInfoDto, ?>> tableColumnList = new ArrayList<>();
         tableColumnList.add(selectionColumn);
         tableColumnList.add(keywordColumn);
-        keywordInfoTable.getColumns().addAll(tableColumnList);
-        return keywordInfoTable;
+        keywordInfoDtoTableView.getColumns().addAll(tableColumnList);
+        return keywordInfoDtoTableView;
     }
 
-    private void fillKeywordInfoTable() {
+    private List<KeywordInfo> fillKeywordInfoTable() {
         final KeywordInfoService keywordInfoService = annotationConfigApplicationContext.getBean(KeywordInfoService.class);
-        final List<KeywordInfo> keywordInfoList = keywordInfoService.findAll();
-        keywordInfoTable.setItems(getKeywordInfoObservableList(keywordInfoList));
+        return keywordInfoService.findAll();
     }
 
     private ObservableList<KeywordInfoDto> getKeywordInfoObservableList(final List<KeywordInfo> keywordInfoList) {
@@ -408,11 +415,10 @@ public class MainGui extends Application {
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
-        Label totalRecordLabel = new Label("Total Record Count :");
-        Label currentRecordLabel = new Label("Current Record Count : ");
-        Label errorRecordLabel = new Label("Error Record Count : ");
-        Label totalWaitTimeLabel = new Label("Total Wait Time : ");
-
+        final Label totalRecordLabel = new Label("Total Record Count :");
+        final Label currentRecordLabel = new Label("Current Record Count : ");
+        final Label errorRecordLabel = new Label("Error Record Count : ");
+        final Label totalWaitTimeLabel = new Label("Total Wait Time : ");
 
         stopButton.setDisable(true);
 
@@ -431,7 +437,7 @@ public class MainGui extends Application {
 
             if (selectedItem == null) {
 
-                Alert alert = new Alert(Alert.AlertType.ERROR);
+                final Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
                 alert.setHeaderText("Error");
                 alert.setContentText("Site must be selected.!");
@@ -440,7 +446,7 @@ public class MainGui extends Application {
             }
 
             if (selectedKeywordInfoDtoList == null || selectedKeywordInfoDtoList.isEmpty()) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
+                final Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
                 alert.setHeaderText("Error");
                 alert.setContentText("Keywords must be selected.!");
@@ -551,6 +557,14 @@ public class MainGui extends Application {
         thirdTab.setText("Content Analyse");
         thirdTab.setClosable(false);
 
+        thirdTab.setOnSelectionChanged(event -> {
+            final Tab tab1 = (Tab) event.getSource();
+
+            if (tab1.isSelected()) {
+                fillAnalyseInfoTable();
+            }
+        });
+
         final TableColumn<SearchInfoDto, Boolean> selectionColumn = new TableColumn<>();
         selectionColumn.setMaxWidth(150);
         selectionColumn.setCellValueFactory(features -> new SimpleBooleanProperty(features.getValue() != null));
@@ -575,8 +589,7 @@ public class MainGui extends Application {
         keywordInfoDtoObservableList.add(stateColumn);
         keywordInfoDtoObservableList.add(linkCountColumn);
 
-        final List<SearchInfoDto> searchInfoDtoList = getSearchInfoDtos();
-        analyseInfoTableView.setItems(FXCollections.observableList(searchInfoDtoList));
+        fillAnalyseInfoTable();
 
         analyseInfoTableView.getColumns().addAll(keywordInfoDtoObservableList);
         HBox hBox = new HBox();
@@ -588,6 +601,11 @@ public class MainGui extends Application {
         thirdTab.setContent(hBox);
 
         return thirdTab;
+    }
+
+    private void fillAnalyseInfoTable() {
+        final List<SearchInfoDto> searchInfoDtoList = getSearchInfoDtos();
+        analyseInfoTableView.setItems(FXCollections.observableList(searchInfoDtoList));
     }
 
     private void updateAnalyseTable() {
@@ -610,14 +628,98 @@ public class MainGui extends Application {
     public VBox getAnalyseContent() {
         final VBox analyseContent = new VBox();
 
+        final GridPane gridPane = getAnalyseGridPane();
+
+        final HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.setPadding(new Insets(25, 25, 25, 25));
+
+        final TableView<KeywordCountDto> keywordCountDtoTableView = new TableView<>();
+
+        final TableColumn<KeywordCountDto, Long> keywordColumn = new TableColumn<>("Keyword");
+        keywordColumn.setCellValueFactory(new PropertyValueFactory<>("keyword"));
+
+        final TableColumn<KeywordCountDto, String> countColumn = new TableColumn<>("Count");
+        countColumn.setCellValueFactory(new PropertyValueFactory<>("count"));
+
+        final List<TableColumn<KeywordCountDto, ?>> keywordInfoDtoObservableList = new ArrayList<>();
+        keywordInfoDtoObservableList.add(keywordColumn);
+        keywordInfoDtoObservableList.add(countColumn);
+
+        keywordCountDtoTableView.getColumns().addAll(keywordInfoDtoObservableList);
+
+        final TableView<KeywordInfoDto> keywordInfoDtoTableView = getKeywordTable();
+        keywordInfoDtoTableView.setItems(getKeywordInfoObservableList(fillKeywordInfoTable()));
+
+        final VBox vBox = new VBox();
+        vBox.setSpacing(5);
+
+        final Button analyseButton = new Button("Analyse");
+        analyseButton.setOnAction(event -> {
+
+            final List<Long> selectedSearchInfoIdList = analyseInfoTableView.getItems().stream()
+                    .filter(SearchInfoDto::getSelected).map(SearchInfoDto::getId).collect(Collectors.toList());
+
+            if (selectedSearchInfoIdList.isEmpty()) {
+                final Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Error");
+                alert.setContentText("SearchInfo must be selected.!");
+                alert.show();
+                return;
+            }
+
+            final ObservableList<KeywordInfoDto> keywordInfoDtoTableViewItems = keywordInfoDtoTableView.getItems();
+
+            final List<String> selectedKeywordInfoDtoList = keywordInfoDtoTableViewItems.stream()
+                    .filter(KeywordInfoDto::getSelected).map(KeywordInfoDto::getText).collect(Collectors.toList());
+
+            final List<ContentType> contentTypes = getSelectedContentTypes();
+
+            final List<KeywordCountDto> keywordCountDtoList = parsedKeywordInfoService.getKeywordCountDto(selectedSearchInfoIdList, selectedKeywordInfoDtoList, contentTypes);
+
+            final ObservableList observableList = FXCollections.observableList(keywordCountDtoList);
+            keywordCountDtoTableView.setItems(observableList);
+
+        });
+
+        final Button clearButton = new Button("Clear");
+
+        final HBox box = new HBox();
+        box.getChildren().addAll(analyseButton, clearButton);
+        vBox.getChildren().addAll(box, keywordInfoDtoTableView);
+
+        hBox.getChildren().addAll(keywordCountDtoTableView, vBox);
+        analyseContent.getChildren().addAll(gridPane, hBox);
+
+        return analyseContent;
+    }
+
+    private List<ContentType> getSelectedContentTypes() {
+
+        final List<ContentType> contentTypeList = new ArrayList<>();
+
+        if (analyseAbstractCheckBox.isSelected()) {
+            contentTypeList.add(ContentType.ABSTRACT);
+        }
+
+        if (analyseClaimCheckBox.isSelected()) {
+            contentTypeList.add(ContentType.CLAIM);
+        }
+
+        if (analyseDescriptionCheckBox.isSelected()) {
+            contentTypeList.add(ContentType.DESCRIPTION);
+        }
+
+        return contentTypeList;
+    }
+
+    private GridPane getAnalyseGridPane() {
         final GridPane gridPane = new GridPane();
         gridPane.setPadding(new Insets(20));
         gridPane.setHgap(10);
         gridPane.setVgap(10);
 
-        final CheckBox abstractCheckBox = new CheckBox("Abstract");
-        final CheckBox claimCheckBox = new CheckBox("Claim");
-        final CheckBox descriptionCheckBox = new CheckBox("Description");
 
         final Label abstractContentCountLabel = new Label("Abstract : ");
         final Label claimContentCountLabel = new Label("Claim : ");
@@ -630,9 +732,9 @@ public class MainGui extends Application {
             analyseDto.setCurrentCount(0);
 
             final ConfigDto configDto = new ConfigDto();
-            configDto.setCrawlAbstract(abstractCheckBox.isSelected());
-            configDto.setCrawlClaim(claimCheckBox.isSelected());
-            configDto.setCrawlDescription(descriptionCheckBox.isSelected());
+            configDto.setCrawlAbstract(analyseAbstractCheckBox.isSelected());
+            configDto.setCrawlClaim(analyseClaimCheckBox.isSelected());
+            configDto.setCrawlDescription(analyseDescriptionCheckBox.isSelected());
             analyseDto.setConfigDto(configDto);
 
             final List<SearchInfoDto> selectedKeywordInfoDtoList = getCheckedSearchInfoDtos();
@@ -641,9 +743,7 @@ public class MainGui extends Application {
         });
 
         final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(() -> Platform.runLater(() -> {
-            currentContentCount.setText(analyseDto.getCurrentCount().toString());
-        }), 1, 100, TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(() -> Platform.runLater(() -> currentContentCount.setText(analyseDto.getCurrentCount().toString())), 1, 100, TimeUnit.MILLISECONDS);
 
         gridPane.add(abstractContentCountLabel, 0, 0);
         gridPane.add(claimContentCountLabel, 0, 1);
@@ -653,9 +753,9 @@ public class MainGui extends Application {
         gridPane.add(claimContentCount, 1, 1);
         gridPane.add(descriptionContentCount, 1, 2);
 
-        gridPane.add(abstractCheckBox, 3, 0);
-        gridPane.add(claimCheckBox, 3, 1);
-        gridPane.add(descriptionCheckBox, 3, 2);
+        gridPane.add(analyseAbstractCheckBox, 3, 0);
+        gridPane.add(analyseClaimCheckBox, 3, 1);
+        gridPane.add(analyseDescriptionCheckBox, 3, 2);
 
         gridPane.add(currentContentCountLabel, 4, 0);
         gridPane.add(currentContentCount, 5, 0);
@@ -663,10 +763,7 @@ public class MainGui extends Application {
         gridPane.add(stateLabel, 4, 1);
         gridPane.add(stateOfAnalysing, 5, 1);
         gridPane.add(analyseStartButton, 4, 2);
-
-        analyseContent.getChildren().add(gridPane);
-
-        return analyseContent;
+        return gridPane;
     }
 
     private class KeywordCheckBoxCell extends TableCell<KeywordInfoDto, Boolean> {
@@ -721,8 +818,8 @@ public class MainGui extends Application {
                 if (item != null && item instanceof SearchInfoDto) {
                     final SearchInfoDto searchInfoDto = (SearchInfoDto) item;
                     searchInfoDto.setSelected(deleteButton.isSelected());
+                    updateAnalyseTable();
                 }
-                updateAnalyseTable();
             });
         }
 

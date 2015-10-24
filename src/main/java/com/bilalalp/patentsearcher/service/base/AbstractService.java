@@ -30,6 +30,11 @@ public abstract class AbstractService<E extends AbstractEntity> implements BaseS
     }
 
     @Override
+    public void persist(List<E> entityList) {
+        getDao().persist(entityList);
+    }
+
+    @Override
     @Transactional(propagation = Propagation.SUPPORTS)
     public List<E> findAll() {
         return getDao().findAll();

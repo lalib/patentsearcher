@@ -1,7 +1,9 @@
 package com.bilalalp.patentsearcher.dao.patentinfo;
 
 import com.bilalalp.patentsearcher.dao.base.Dao;
+import com.bilalalp.patentsearcher.dto.AnalyseDto;
 import com.bilalalp.patentsearcher.dto.ContentSearchDto;
+import com.bilalalp.patentsearcher.dto.KeywordCountDto;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
 
 import java.util.List;

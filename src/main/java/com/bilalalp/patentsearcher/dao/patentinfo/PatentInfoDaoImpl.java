@@ -1,6 +1,8 @@
 package com.bilalalp.patentsearcher.dao.patentinfo;
 
 import com.bilalalp.patentsearcher.dao.base.AbstractDao;
+import com.bilalalp.patentsearcher.dto.AnalyseDto;
+import com.bilalalp.patentsearcher.dto.KeywordCountDto;
 import com.bilalalp.patentsearcher.entity.ContentSearchInfoStatusType;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
 import org.springframework.stereotype.Repository;
@@ -70,7 +72,7 @@ public class PatentInfoDaoImpl extends AbstractDao<PatentInfo> implements Patent
 
         return getEntityManager()
                 .createQuery("SELECT p FROM PatentInfo p WHERE p.searchInfo.id IN :searchInfoIdList AND p.abstractContent IS NOT NULL")
-                .setParameter("searchInfoIdList",searchInfoIdList)
+                .setParameter("searchInfoIdList", searchInfoIdList)
                 .getResultList();
     }
 
