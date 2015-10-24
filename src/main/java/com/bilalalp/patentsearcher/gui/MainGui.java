@@ -1,5 +1,6 @@
 package com.bilalalp.patentsearcher.gui;
 
+import com.bilalalp.patentsearcher.business.parser.ParserService;
 import com.bilalalp.patentsearcher.business.searcher.SearcherService;
 import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
 import com.bilalalp.patentsearcher.dto.*;
@@ -39,9 +40,11 @@ public class MainGui extends Application {
 
     private final AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(PatentSearcherConfiguration.class);
     private final PatentInfoService patentInfoService = annotationConfigApplicationContext.getBean(PatentInfoService.class);
+    private final ParserService parserService = annotationConfigApplicationContext.getBean(ParserService.class);
 
     private UIInfoDto uiInfoDto = new UIInfoDto();
     private ContentSearchDto contentSearchDto = new ContentSearchDto();
+    private ConfigDto configDto = new ConfigDto();
 
     private Label totalRecordCountLabel = new Label();
     private Label currentRecordCountLabel = new Label();
@@ -50,12 +53,22 @@ public class MainGui extends Application {
     private final Label totalLinkCount = new Label(contentSearchDto.getTotalLinkCount().toString());
     private final Label analysiedLinkCount = new Label(contentSearchDto.getAnalysiedLinkCount().toString());
     private final Label notAnalysiedLinkCount = new Label(contentSearchDto.getNotAnalysiedLinkCount().toString());
+    private final Label crawledCount = new Label();
+    private final Label stateLabel = new Label("State : ");
+
+    private final Label abstractCountLabel = new Label("Abstract Count : ");
+    private final Label abstractCount = new Label(contentSearchDto.getAbstractCount().toString());
+
+    private final Label crawlingTotalWaitTime = new Label();
+    private final Label crawlingTotalErrorCount = new Label();
 
     private Label state = new Label("NOT YET");
+    private Label stateOfCrawling = new Label("NOT YET");
     private TextArea textArea = new TextArea();
 
     private TableView<KeywordInfoDto> table = new TableView<>();
     private TableView<SiteInfoDto> siteInfoDtoTableView = new TableView<>();
+    final TableView<SearchInfoDto> searchInfoDtoTableView = new TableView<>();
 
     private Button startButton = new Button("Start");
     private Button stopButton = new Button("Stop");
@@ -66,6 +79,7 @@ public class MainGui extends Application {
     final CheckBox claimCheckBox = new CheckBox("Claim");
 
     private Thread searchThread = new Thread();
+    private Thread crawlThread = new Thread();
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -101,7 +115,6 @@ public class MainGui extends Application {
         tab2.setText("Content Search");
 
         final HBox hBox = new HBox();
-        final TableView<SearchInfoDto> searchInfoDtoTableView = new TableView<>();
 
         searchInfoDtoTableView.setOnMousePressed(event -> {
             if (event.isPrimaryButtonDown() && event.getClickCount() == 2) {
@@ -185,6 +198,33 @@ public class MainGui extends Application {
         final Label totalLink = new Label("Total Link Count : ");
         final Label analysiedLink = new Label("Analysied Link Count : ");
         final Label notAnalysiedLink = new Label("Not Analysied Link Count : ");
+        final Label crawlingErrorCountLabel = new Label("Error Count : ");
+        final Label crawlingTotalWaitingTime = new Label("Error Waiting Time : ");
+        final Button startButton = new Button("Start");
+        final Button stopButton = new Button("Stop");
+
+
+        final Label crawledCountLabel = new Label("Current Count : ");
+
+        startButton.setOnAction(event -> {
+            stateOfCrawling.setText("NOT YET");
+            configDto.setCrawlingDto(new CrawlingDto());
+            final SearchInfoDto searchInfoDto = searchInfoDtoTableView.getSelectionModel().getSelectedItem();
+            crawlThread = new Thread(startCrawlingAsANewThread(searchInfoDto));
+            crawlThread.start();
+        });
+
+        stopButton.setOnAction(event -> crawlThread.stop());
+
+        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> Platform.runLater(() -> {
+
+            crawledCount.setText(configDto.getCrawlingDto().getCrawlCount().toString());
+            crawlingTotalWaitTime.setText(configDto.getCrawlingDto().getTotalWaitTime().toString());
+            crawlingTotalErrorCount.setText(configDto.getCrawlingDto().getErrorCount().toString());
+            ;
+
+        }), 1, 1, TimeUnit.SECONDS);
 
         gridPane.add(totalLink, 0, 1);
         gridPane.add(totalLinkCount, 1, 1);
@@ -195,6 +235,19 @@ public class MainGui extends Application {
         gridPane.add(notAnalysiedLink, 0, 3);
         gridPane.add(notAnalysiedLinkCount, 1, 3);
         gridPane.add(claimCheckBox, 2, 3);
+
+        gridPane.add(startButton, 1, 4);
+        gridPane.add(stopButton, 2, 4);
+
+        gridPane.add(crawledCountLabel, 0, 6);
+        gridPane.add(crawledCount, 1, 6);
+        gridPane.add(crawlingErrorCountLabel, 0, 7);
+        gridPane.add(crawlingTotalErrorCount, 1, 7);
+        gridPane.add(crawlingTotalWaitingTime, 0, 8);
+        gridPane.add(crawlingTotalWaitTime, 1, 8);
+
+        gridPane.add(stateLabel, 0, 9);
+        gridPane.add(stateOfCrawling, 1, 9);
 
         vBox.getChildren().addAll(gridPane);
         return vBox;
@@ -296,7 +349,7 @@ public class MainGui extends Application {
         Label currentRecordLabel = new Label("Current Record Count : ");
         Label errorRecordLabel = new Label("Error Record Count : ");
         Label totalWaitTimeLabel = new Label("Total Wait Time : ");
-        Label stateLabel = new Label("State : ");
+
 
         stopButton.setDisable(true);
 
@@ -400,6 +453,16 @@ public class MainGui extends Application {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        };
+    }
+
+    private Runnable startCrawlingAsANewThread(final SearchInfoDto searchInfoDto) {
+        return () -> {
+            configDto.setCrawlAbstract(abstractCheckBox.isSelected());
+            configDto.setCrawlClaim(claimCheckBox.isSelected());
+            configDto.setCrawlDescription(descriptionCheckBox.isSelected());
+            parserService.crawl(searchInfoDto, configDto);
+            Platform.runLater(() -> stateOfCrawling.setText("FINISHED"));
         };
     }
 

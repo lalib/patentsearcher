@@ -15,4 +15,7 @@ public interface PatentInfoDao extends Dao<PatentInfo> {
     Long getNotAnalysiedLinkCount(Long searchId);
 
     List<PatentInfo> getPatentInfoListBySearchInfoId(Long searchInfoId);
+
+    Long getAbstractCount(Long searchInfoId);
+
 }

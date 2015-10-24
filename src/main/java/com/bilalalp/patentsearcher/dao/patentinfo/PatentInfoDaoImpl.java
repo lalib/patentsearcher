@@ -35,12 +35,23 @@ public class PatentInfoDaoImpl extends AbstractDao<PatentInfo> implements Patent
     }
 
     @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
     public List<PatentInfo> getPatentInfoListBySearchInfoId(final Long searchInfoId) {
 
         return getEntityManager()
                 .createQuery("Select p from PatentInfo p where p.searchInfo.id=:id")
-                .setParameter("id",searchInfoId)
+                .setParameter("id", searchInfoId)
                 .getResultList();
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
+    public Long getAbstractCount(final Long searchInfoId) {
+
+        return (Long) getEntityManager()
+                .createQuery("SELECT COUNT(p) FROM PatentInfo p WHERE p.searchInfo.id =:id")
+                .setParameter("id", searchInfoId)
+                .getSingleResult();
     }
 
     @Transactional(propagation = Propagation.SUPPORTS)

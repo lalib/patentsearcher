@@ -1,39 +1,68 @@
 package com.bilalalp.patentsearcher.business.parser;
 
-import com.bilalalp.patentsearcher.dto.UIInfoDto;
-import com.bilalalp.patentsearcher.dto.WaitingEnum;
+import com.bilalalp.patentsearcher.config.PatentSearcherInitialData;
+import com.bilalalp.patentsearcher.dto.ConfigDto;
+import com.bilalalp.patentsearcher.entity.ContentSearchInfoStatusType;
 import com.bilalalp.patentsearcher.entity.PatentInfo;
+import com.bilalalp.patentsearcher.entity.SiteInfo;
+import com.bilalalp.patentsearcher.service.patentinfo.PatentInfoService;
+import com.bilalalp.patentsearcher.service.siteinfo.SiteInfoService;
 import com.bilalalp.patentsearcher.util.JSoupUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.util.List;
+import javax.annotation.PostConstruct;
 
+@Service
 public class PatentScopeContentParserServiceImpl implements PatentContentParserService {
 
-    private UIInfoDto uiInfoDto;
+    @Autowired
+    private SiteInfoService siteInfoService;
 
-    private WaitingEnum waitingEnum;
+    @Autowired
+    private PatentInfoService patentInfoService;
 
+    private SiteInfo siteInfo;
 
-    private List<PatentInfo> getPatentContents(final List<PatentInfo> patentInfos) throws IOException {
+    @PostConstruct
+    public void init() {
+        siteInfo = siteInfoService.findBySiteKey(PatentSearcherInitialData.getPatentScopeSiteInfo().getSiteKey());
+    }
 
-        for (final PatentInfo patentInfo : patentInfos) {
+    @Override
+    @Transactional
+    public void getPatentContents(final PatentInfo patentInfo, final ConfigDto configDto) {
 
-            final String patentLink = patentInfo.getPatentLink();
+        final String patentLink = patentInfo.getPatentLink();
+        configDto.getCrawlingDto().setCurrentLink(patentLink);
 
-            final Element body = JSoupUtil.getBody(patentLink, uiInfoDto, waitingEnum);
+        final Element body = JSoupUtil.getBody(patentLink, configDto.getWaitingEnum(),configDto.getCrawlingDto());
 
-            if (body != null) {
+        if (body != null) {
+            boolean anyChange = false;
+
+            if (Boolean.TRUE.equals(configDto.getCrawlAbstract())) {
                 final String abstractContent = getAbstractContent(body);
+                if (StringUtils.isNotEmpty(abstractContent)) {
+                    patentInfo.setAbstractContent(abstractContent);
+                    anyChange = true;
+                }
+            }
 
-                patentInfo.setAbstractContent(abstractContent);
-
+            if (anyChange) {
+                patentInfo.setContentSearchInfoStatusType(ContentSearchInfoStatusType.ANALYSIED);
+                patentInfoService.update(patentInfo);
             }
         }
+    }
 
-        return patentInfos;
+    @Override
+    public String getSiteUrl() {
+        return siteInfo.getSiteAddres();
     }
 
     private String getAbstractContent(final Element body) {

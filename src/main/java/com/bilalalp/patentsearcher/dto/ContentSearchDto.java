@@ -12,4 +12,6 @@ public class ContentSearchDto {
     private Long analysiedLinkCount = 0L;
 
     private Long notAnalysiedLinkCount = 0L;
+
+    private Long abstractCount = 0L;
 }

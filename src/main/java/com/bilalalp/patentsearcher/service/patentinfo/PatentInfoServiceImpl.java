@@ -40,11 +40,13 @@ public class PatentInfoServiceImpl extends AbstractService<PatentInfo> implement
         final Long analysiedLinkCount = patentInfoDao.getAnalysiedLinkCount(searchInfoId);
         final Long notAnalysiedLinkCount = patentInfoDao.getNotAnalysiedLinkCount(searchInfoId);
         final Long totalLinkCount = patentInfoDao.getTotalLinkCount(searchInfoId);
+        final Long abstractCount = patentInfoDao.getAbstractCount(searchInfoId);
 
         final ContentSearchDto contentSearchDto = new ContentSearchDto();
         contentSearchDto.setAnalysiedLinkCount(analysiedLinkCount);
         contentSearchDto.setNotAnalysiedLinkCount(notAnalysiedLinkCount);
         contentSearchDto.setTotalLinkCount(totalLinkCount);
+        contentSearchDto.setAbstractCount(abstractCount);
 
         return contentSearchDto;
     }
