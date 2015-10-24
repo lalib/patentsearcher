@@ -18,4 +18,8 @@ public interface PatentInfoDao extends Dao<PatentInfo> {
 
     Long getAbstractCount(Long searchInfoId);
 
+    Long getAbstractCount(List<Long> searchIdList);
+
+    List<PatentInfo> getPatentInfoList(List<Long> searchInfoIdList);
+
 }

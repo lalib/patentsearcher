@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = PatentInfo.TABLE_NAME)
@@ -52,5 +53,11 @@ public class PatentInfo extends AbstractEntity {
     @ManyToOne(targetEntity = SearchInfo.class, fetch = FetchType.LAZY)
     @JoinColumn(name = SearchInfo.JOIN_COLUMN)
     private SearchInfo searchInfo;
+
+    @ElementCollection
+    private List<String> abstractContentWordList;
+
+    @ElementCollection
+    private List<String> claimContentWordList;
 
 }

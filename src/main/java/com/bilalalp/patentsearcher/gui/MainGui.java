@@ -1,5 +1,6 @@
 package com.bilalalp.patentsearcher.gui;
 
+import com.bilalalp.patentsearcher.business.analyser.PatentAnalyser;
 import com.bilalalp.patentsearcher.business.parser.ParserService;
 import com.bilalalp.patentsearcher.business.searcher.SearcherService;
 import com.bilalalp.patentsearcher.config.PatentSearcherConfiguration;
@@ -41,10 +42,12 @@ public class MainGui extends Application {
     private final AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(PatentSearcherConfiguration.class);
     private final PatentInfoService patentInfoService = annotationConfigApplicationContext.getBean(PatentInfoService.class);
     private final ParserService parserService = annotationConfigApplicationContext.getBean(ParserService.class);
+    private final PatentAnalyser patentAnalyser = annotationConfigApplicationContext.getBean(PatentAnalyser.class);
 
     private UIInfoDto uiInfoDto = new UIInfoDto();
     private ContentSearchDto contentSearchDto = new ContentSearchDto();
     private ConfigDto configDto = new ConfigDto();
+    private AnalyseDto analyseDto = new AnalyseDto();
 
     private Label totalRecordCountLabel = new Label();
     private Label currentRecordCountLabel = new Label();
@@ -55,6 +58,7 @@ public class MainGui extends Application {
     private final Label notAnalysiedLinkCount = new Label(contentSearchDto.getNotAnalysiedLinkCount().toString());
     private final Label crawledCount = new Label();
     private final Label stateLabel = new Label("State : ");
+    private final Label currentContentCount = new Label("0");
 
     private final Label abstractCountLabel = new Label("Abstract Count : ");
     private final Label abstractCount = new Label(contentSearchDto.getAbstractCount().toString());
@@ -63,8 +67,13 @@ public class MainGui extends Application {
     private final Label crawlingTotalErrorCount = new Label();
     private final Label siteId = new Label();
 
+    private final Label abstractContentCount = new Label("0");
+    private final Label claimContentCount = new Label("0");
+    private final Label descriptionContentCount = new Label("0");
+
     private Label state = new Label("NOT YET");
     private Label stateOfCrawling = new Label("NOT YET");
+    private Label stateOfAnalysing = new Label("NOT YET");
     private final TextArea textArea = new TextArea();
     private final TextArea crawledLinkTextArea = new TextArea();
 
@@ -80,6 +89,7 @@ public class MainGui extends Application {
     private final Button clearButton = new Button("Clear");
     private final Button crawlStartButton = new Button("Start");
     private final Button crawlStopButton = new Button("Stop");
+    private final Button analyseStartButton = new Button("Start");
 
     final CheckBox abstractCheckBox = new CheckBox("Abstract");
     final CheckBox descriptionCheckBox = new CheckBox("Description");
@@ -524,6 +534,18 @@ public class MainGui extends Application {
         };
     }
 
+    private Runnable startAnalysingAsANewThread(final List<SearchInfoDto> searchInfoDtoList, final AnalyseDto analyseDto) {
+        return () -> {
+            analyseStartButton.setDisable(true);
+            stateOfAnalysing.setText("NOT YET");
+
+            patentAnalyser.analyse(searchInfoDtoList, analyseDto);
+
+            stateOfAnalysing.setText("FINISHED");
+            analyseStartButton.setDisable(false);
+        };
+    }
+
     public Tab getThirdTab() {
         final Tab thirdTab = new Tab();
         thirdTab.setText("Content Analyse");
@@ -558,11 +580,93 @@ public class MainGui extends Application {
 
         analyseInfoTableView.getColumns().addAll(keywordInfoDtoObservableList);
         HBox hBox = new HBox();
-        hBox.getChildren().add(analyseInfoTableView);
+
+        VBox vbox = getAnalyseContent();
+
+        hBox.getChildren().addAll(analyseInfoTableView, vbox);
 
         thirdTab.setContent(hBox);
 
         return thirdTab;
+    }
+
+    private void updateAnalyseTable() {
+
+        final List<SearchInfoDto> selectedKeywordInfoDtoList = getCheckedSearchInfoDtos();
+
+        final List<Long> searchIdList = selectedKeywordInfoDtoList.stream().map(SearchInfoDto::getId).collect(Collectors.toList());
+        final AnalyseDto analyseDto = patentInfoService.getContentCounts(searchIdList);
+
+        abstractContentCount.setText(analyseDto.getAbstractCount().toString());
+        claimContentCount.setText(analyseDto.getClaimCount().toString());
+        descriptionContentCount.setText(analyseDto.getDescriptionCount().toString());
+    }
+
+    private List<SearchInfoDto> getCheckedSearchInfoDtos() {
+        final ObservableList<SearchInfoDto> keywordInfoDtoObservableList = analyseInfoTableView.getItems();
+        return keywordInfoDtoObservableList.stream().filter(keywordInfoDto -> Boolean.TRUE.equals(keywordInfoDto.getSelected())).collect(Collectors.toList());
+    }
+
+    public VBox getAnalyseContent() {
+        final VBox analyseContent = new VBox();
+
+        final GridPane gridPane = new GridPane();
+        gridPane.setPadding(new Insets(20));
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+
+        final CheckBox abstractCheckBox = new CheckBox("Abstract");
+        final CheckBox claimCheckBox = new CheckBox("Claim");
+        final CheckBox descriptionCheckBox = new CheckBox("Description");
+
+        final Label abstractContentCountLabel = new Label("Abstract : ");
+        final Label claimContentCountLabel = new Label("Claim : ");
+        final Label descriptionContentCountLabel = new Label("Description : ");
+
+        final Label currentContentCountLabel = new Label("Current : ");
+        final Label stateLabel = new Label("State : ");
+
+        analyseStartButton.setOnAction(event -> {
+            analyseDto.setCurrentCount(0);
+
+            final ConfigDto configDto = new ConfigDto();
+            configDto.setCrawlAbstract(abstractCheckBox.isSelected());
+            configDto.setCrawlClaim(claimCheckBox.isSelected());
+            configDto.setCrawlDescription(descriptionCheckBox.isSelected());
+            analyseDto.setConfigDto(configDto);
+
+            final List<SearchInfoDto> selectedKeywordInfoDtoList = getCheckedSearchInfoDtos();
+            final Thread thread = new Thread(startAnalysingAsANewThread(selectedKeywordInfoDtoList, analyseDto));
+            thread.run();
+        });
+
+        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> Platform.runLater(() -> {
+            currentContentCount.setText(analyseDto.getCurrentCount().toString());
+        }), 1, 100, TimeUnit.MILLISECONDS);
+
+        gridPane.add(abstractContentCountLabel, 0, 0);
+        gridPane.add(claimContentCountLabel, 0, 1);
+        gridPane.add(descriptionContentCountLabel, 0, 2);
+
+        gridPane.add(abstractContentCount, 1, 0);
+        gridPane.add(claimContentCount, 1, 1);
+        gridPane.add(descriptionContentCount, 1, 2);
+
+        gridPane.add(abstractCheckBox, 3, 0);
+        gridPane.add(claimCheckBox, 3, 1);
+        gridPane.add(descriptionCheckBox, 3, 2);
+
+        gridPane.add(currentContentCountLabel, 4, 0);
+        gridPane.add(currentContentCount, 5, 0);
+
+        gridPane.add(stateLabel, 4, 1);
+        gridPane.add(stateOfAnalysing, 5, 1);
+        gridPane.add(analyseStartButton, 4, 2);
+
+        analyseContent.getChildren().add(gridPane);
+
+        return analyseContent;
     }
 
     private class KeywordCheckBoxCell extends TableCell<KeywordInfoDto, Boolean> {
@@ -618,6 +722,7 @@ public class MainGui extends Application {
                     final SearchInfoDto searchInfoDto = (SearchInfoDto) item;
                     searchInfoDto.setSelected(deleteButton.isSelected());
                 }
+                updateAnalyseTable();
             });
         }
 

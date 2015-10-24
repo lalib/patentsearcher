@@ -1,6 +1,7 @@
 package com.bilalalp.patentsearcher.entity;
 
 import javax.annotation.Generated;
+import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
 
@@ -9,6 +10,7 @@ import javax.persistence.metamodel.StaticMetamodel;
 public abstract class PatentInfo_ extends com.bilalalp.patentsearcher.entity.AbstractEntity_ {
 
 	public static volatile SingularAttribute<PatentInfo, String> searchLink;
+	public static volatile ListAttribute<PatentInfo, String> abstractContentWordList;
 	public static volatile SingularAttribute<PatentInfo, SearchInfo> searchInfo;
 	public static volatile SingularAttribute<PatentInfo, String> patentNumber;
 	public static volatile SingularAttribute<PatentInfo, String> abstractContent;
@@ -18,6 +20,7 @@ public abstract class PatentInfo_ extends com.bilalalp.patentsearcher.entity.Abs
 	public static volatile SingularAttribute<PatentInfo, String> patentLink;
 	public static volatile SingularAttribute<PatentInfo, ContentSearchInfoStatusType> contentSearchInfoStatusType;
 	public static volatile SingularAttribute<PatentInfo, SiteInfo> siteInfo;
+	public static volatile ListAttribute<PatentInfo, String> claimContentWordList;
 
 }
 
