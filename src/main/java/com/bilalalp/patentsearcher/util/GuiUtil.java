@@ -1,9 +1,6 @@
 package com.bilalalp.patentsearcher.util;
 
-import com.bilalalp.patentsearcher.dto.KeywordCountDto;
-import com.bilalalp.patentsearcher.dto.KeywordInfoDto;
-import com.bilalalp.patentsearcher.dto.SearchInfoDto;
-import com.bilalalp.patentsearcher.dto.StopWordInfoDto;
+import com.bilalalp.patentsearcher.dto.*;
 import com.bilalalp.patentsearcher.gui.KeywordInfoGui;
 import com.bilalalp.patentsearcher.gui.SiteInfoGui;
 import com.bilalalp.patentsearcher.gui.StopWordInfoGui;
@@ -155,5 +152,25 @@ public final class GuiUtil {
 
         keywordCountDtoTableView.getColumns().addAll(keywordInfoDtoObservableList);
         return keywordCountDtoTableView;
+    }
+
+
+    public static TableView<SiteInfoDto> getSiteInfoTable() {
+
+        final TableView<SiteInfoDto> siteInfoDtoTableView = new TableView<>();
+        siteInfoDtoTableView.setMaxWidth(260);
+
+        final TableColumn<SiteInfoDto, String> keywordColumn = new TableColumn<>("Site Name");
+        final TableColumn<SiteInfoDto, Boolean> selectionColumn = new TableColumn<>();
+
+        keywordColumn.setCellValueFactory(new PropertyValueFactory<>("siteName"));
+        keywordColumn.setMinWidth(200);
+
+        final List<TableColumn<SiteInfoDto, ?>> tableColumnList = new ArrayList<>();
+        tableColumnList.add(selectionColumn);
+        tableColumnList.add(keywordColumn);
+
+        siteInfoDtoTableView.getColumns().addAll(tableColumnList);
+        return siteInfoDtoTableView;
     }
 }
