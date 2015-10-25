@@ -8,11 +8,13 @@ import com.bilalalp.patentsearcher.dto.*;
 import com.bilalalp.patentsearcher.entity.ContentType;
 import com.bilalalp.patentsearcher.entity.KeywordInfo;
 import com.bilalalp.patentsearcher.entity.SiteInfo;
+import com.bilalalp.patentsearcher.entity.StopWordInfo;
 import com.bilalalp.patentsearcher.service.keywordinfo.KeywordInfoService;
 import com.bilalalp.patentsearcher.service.parsedkeywordinfo.ParsedKeywordInfoService;
 import com.bilalalp.patentsearcher.service.patentinfo.PatentInfoService;
 import com.bilalalp.patentsearcher.service.searchinfo.SearchInfoService;
 import com.bilalalp.patentsearcher.service.siteinfo.SiteInfoService;
+import com.bilalalp.patentsearcher.service.stopwordinfo.StopWordInfoService;
 import com.bilalalp.patentsearcher.util.GuiUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -85,7 +87,7 @@ public class MainGui extends Application {
     private final TableView<SearchInfoDto> searchInfoDtoTableView = new TableView<>();
     private final TableView<SearchInfoDto> analyseInfoTableView = new TableView<>();
     private final TableView<SiteInfoDto> siteInfoTable = new TableView<>();
-    private final TableView<KeywordInfoDto> keywordInfoTable = new TableView<>();
+    private final TableView<StopWordInfoDto> stopWordInfoDtoTableView = getStopWordTable();
 
     private final Button startButton = new Button("Start");
     private final Button stopButton = new Button("Stop");
@@ -362,15 +364,45 @@ public class MainGui extends Application {
         return keywordInfoDtoTableView;
     }
 
+    private TableView<StopWordInfoDto> getStopWordTable(){
+        final TableView<StopWordInfoDto> keywordInfoDtoTableView = new TableView<>();
+
+        keywordInfoDtoTableView.setMaxWidth(260);
+        TableColumn<StopWordInfoDto, String> keywordColumn = new TableColumn<>("Keyword");
+        TableColumn<StopWordInfoDto, Boolean> selectionColumn = new TableColumn<>();
+        keywordColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
+        keywordColumn.setMinWidth(200);
+
+        selectionColumn.setCellValueFactory(features -> new SimpleBooleanProperty(features.getValue() != null));
+        selectionColumn.setCellFactory(personBooleanTableColumn -> new StopWordCheckBoxCell());
+
+        final List<TableColumn<StopWordInfoDto, ?>> tableColumnList = new ArrayList<>();
+        tableColumnList.add(selectionColumn);
+        tableColumnList.add(keywordColumn);
+        keywordInfoDtoTableView.getColumns().addAll(tableColumnList);
+        return keywordInfoDtoTableView;
+    }
+
     private List<KeywordInfo> fillKeywordInfoTable() {
         final KeywordInfoService keywordInfoService = annotationConfigApplicationContext.getBean(KeywordInfoService.class);
         return keywordInfoService.findAll();
+    }
+
+    private List<StopWordInfo> getAllStopWords(){
+        final StopWordInfoService stopWordInfoService = annotationConfigApplicationContext.getBean(StopWordInfoService.class);
+        return stopWordInfoService.findAll();
     }
 
     private ObservableList<KeywordInfoDto> getKeywordInfoObservableList(final List<KeywordInfo> keywordInfoList) {
 
         final ObservableList<KeywordInfoDto> keywordInfoDtoObservableList = FXCollections.observableArrayList();
         keywordInfoDtoObservableList.addAll(keywordInfoList.stream().map(keywordInfo -> new KeywordInfoDto(keywordInfo.getId(), keywordInfo.getKeyword())).collect(Collectors.toList()));
+        return keywordInfoDtoObservableList;
+    }
+
+    private ObservableList<StopWordInfoDto> getStopWordInfoObservableList(final List<StopWordInfo> stopWordInfoList){
+        final ObservableList<StopWordInfoDto> keywordInfoDtoObservableList = FXCollections.observableArrayList();
+        keywordInfoDtoObservableList.addAll(stopWordInfoList.stream().map(keywordInfo -> new StopWordInfoDto(keywordInfo.getId(), keywordInfo.getWord())).collect(Collectors.toList()));
         return keywordInfoDtoObservableList;
     }
 
@@ -562,6 +594,7 @@ public class MainGui extends Application {
 
             if (tab1.isSelected()) {
                 fillAnalyseInfoTable();
+                stopWordInfoDtoTableView.setItems(getStopWordInfoObservableList(getAllStopWords()));
             }
         });
 
@@ -648,8 +681,7 @@ public class MainGui extends Application {
 
         keywordCountDtoTableView.getColumns().addAll(keywordInfoDtoObservableList);
 
-        final TableView<KeywordInfoDto> keywordInfoDtoTableView = getKeywordTable();
-        keywordInfoDtoTableView.setItems(getKeywordInfoObservableList(fillKeywordInfoTable()));
+        stopWordInfoDtoTableView.setItems(getStopWordInfoObservableList(getAllStopWords()));
 
         final VBox vBox = new VBox();
         vBox.setSpacing(5);
@@ -657,8 +689,11 @@ public class MainGui extends Application {
         final Button analyseButton = new Button("Analyse");
         analyseButton.setOnAction(event -> {
 
-            final List<Long> selectedSearchInfoIdList = analyseInfoTableView.getItems().stream()
-                    .filter(SearchInfoDto::getSelected).map(SearchInfoDto::getId).collect(Collectors.toList());
+            final List<Long> selectedSearchInfoIdList = analyseInfoTableView.getItems()
+                    .stream()
+                    .filter(SearchInfoDto::getSelected)
+                    .map(SearchInfoDto::getId)
+                    .collect(Collectors.toList());
 
             if (selectedSearchInfoIdList.isEmpty()) {
                 final Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -669,25 +704,28 @@ public class MainGui extends Application {
                 return;
             }
 
-            final ObservableList<KeywordInfoDto> keywordInfoDtoTableViewItems = keywordInfoDtoTableView.getItems();
+            final ObservableList<StopWordInfoDto> keywordInfoDtoTableViewItems = stopWordInfoDtoTableView.getItems();
 
-            final List<String> selectedKeywordInfoDtoList = keywordInfoDtoTableViewItems.stream()
-                    .filter(KeywordInfoDto::getSelected).map(KeywordInfoDto::getText).collect(Collectors.toList());
+            final List<String> selectedKeywordInfoDtoList = new ArrayList<>();
 
-            final List<ContentType> contentTypes = getSelectedContentTypes();
+            for(StopWordInfoDto stopWordInfoDto : keywordInfoDtoTableViewItems){
+                if(Boolean.TRUE.equals(stopWordInfoDto.getSelected())){
+                    selectedKeywordInfoDtoList.add(stopWordInfoDto.getText());
+                }
+            }
+
+        final List<ContentType> contentTypes = getSelectedContentTypes();
 
             final List<KeywordCountDto> keywordCountDtoList = parsedKeywordInfoService.getKeywordCountDto(selectedSearchInfoIdList, selectedKeywordInfoDtoList, contentTypes);
 
-            final ObservableList observableList = FXCollections.observableList(keywordCountDtoList);
+            final ObservableList<KeywordCountDto> observableList = FXCollections.observableList(keywordCountDtoList);
             keywordCountDtoTableView.setItems(observableList);
-
         });
 
-        final Button clearButton = new Button("Clear");
 
         final HBox box = new HBox();
-        box.getChildren().addAll(analyseButton, clearButton);
-        vBox.getChildren().addAll(box, keywordInfoDtoTableView);
+        box.getChildren().addAll(analyseButton);
+        vBox.getChildren().addAll(box, stopWordInfoDtoTableView);
 
         hBox.getChildren().addAll(keywordCountDtoTableView, vBox);
         analyseContent.getChildren().addAll(gridPane, hBox);
@@ -719,7 +757,6 @@ public class MainGui extends Application {
         gridPane.setPadding(new Insets(20));
         gridPane.setHgap(10);
         gridPane.setVgap(10);
-
 
         final Label abstractContentCountLabel = new Label("Abstract : ");
         final Label claimContentCountLabel = new Label("Claim : ");
@@ -783,6 +820,40 @@ public class MainGui extends Application {
 
                 if (item != null && item instanceof KeywordInfoDto) {
                     final KeywordInfoDto keywordInfoDto = (KeywordInfoDto) item;
+                    keywordInfoDto.setSelected(deleteButton.isSelected());
+                }
+            });
+        }
+
+        @Override
+        protected void updateItem(final Boolean item, final boolean empty) {
+            super.updateItem(item, empty);
+            if (!empty) {
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                setGraphic(paddedButton);
+            } else {
+                setGraphic(null);
+            }
+        }
+    }
+
+    private class StopWordCheckBoxCell extends TableCell<StopWordInfoDto,Boolean>{
+        final CheckBox deleteButton = new CheckBox();
+
+        final StackPane paddedButton = new StackPane();
+
+        StopWordCheckBoxCell() {
+            paddedButton.setPadding(new Insets(3));
+            HBox vBox = new HBox();
+            vBox.setSpacing(10);
+            vBox.getChildren().addAll(deleteButton);
+            paddedButton.getChildren().add(vBox);
+
+            deleteButton.setOnAction(actionEvent -> {
+                final Object item = getTableRow().getItem();
+
+                if (item != null && item instanceof StopWordInfoDto) {
+                    final StopWordInfoDto keywordInfoDto = (StopWordInfoDto) item;
                     keywordInfoDto.setSelected(deleteButton.isSelected());
                 }
             });

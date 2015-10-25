@@ -72,6 +72,8 @@ public class PatentAnalyser {
     }
 
     private List<String> analysePairContent(final String content) {
+
+        final String replacedString = clearString(content);
         return Collections.emptyList();
     }
 
@@ -79,6 +81,9 @@ public class PatentAnalyser {
 
         return content.toLowerCase()
                 .replaceAll("\\.", " ")
+                .replaceAll("-", " ")
+                .replaceAll("\\(", " ")
+                .replaceAll("\\)", " ")
                 .replaceAll(",", " ")
                 .replaceAll("\\?", " ")
                 .replaceAll("!", " ")
