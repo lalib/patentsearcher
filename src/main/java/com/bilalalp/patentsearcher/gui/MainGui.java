@@ -16,25 +16,24 @@ import javafx.stage.Stage;
 public class MainGui extends Application {
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(final Stage primaryStage) throws Exception {
 
         primaryStage.setTitle("Patent Searcher");
         primaryStage.setOnCloseRequest(event -> System.exit(1));
-        Group root = new Group();
-        Scene scene = new Scene(root, 1200, 600, Color.WHITE);
 
-        TabPane tabPane = new TabPane();
-        BorderPane borderPane = new BorderPane();
+        final Group root = new Group();
+        final Scene scene = new Scene(root, 1200, 600, Color.WHITE);
 
-        Tab tab = new SearchingPage().getTab();
-        Tab tab2 = new ParsingPage().getTab();
-        Tab tab3 = new AnalysingPage().getTab();
+        final Tab firstTab = new SearchingPage().getTab();
+        final Tab secondTab = new ParsingPage().getTab();
+        final Tab thirdTab = new AnalysingPage().getTab();
 
-        tabPane.getTabs().addAll(tab, tab2, tab3);
+        final TabPane tabPane = new TabPane();
+        tabPane.getTabs().addAll(firstTab, secondTab, thirdTab);
 
+        final BorderPane borderPane = new BorderPane();
         borderPane.prefHeightProperty().bind(scene.heightProperty());
         borderPane.prefWidthProperty().bind(scene.widthProperty());
-
         borderPane.setCenter(tabPane);
         borderPane.setTop(GuiUtil.getMenuBar(borderPane.widthProperty()));
 

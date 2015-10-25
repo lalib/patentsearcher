@@ -22,6 +22,7 @@ public class ParsedKeywordInfo extends AbstractEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Lob
     @Column(name = "C_KEYWORD")
     private String keyword;
 

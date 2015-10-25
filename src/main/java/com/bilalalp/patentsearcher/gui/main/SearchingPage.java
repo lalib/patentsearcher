@@ -36,6 +36,7 @@ public class SearchingPage {
     private final AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(PatentSearcherConfiguration.class);
     private final SiteInfoService siteInfoService = annotationConfigApplicationContext.getBean(SiteInfoService.class);
     private final KeywordInfoService keywordInfoService = annotationConfigApplicationContext.getBean(KeywordInfoService.class);
+    private final SearcherService patentScopePatentSearcherService = annotationConfigApplicationContext.getBean(SearcherService.class);
 
     private UIInfoDto uiInfoDto = new UIInfoDto();
 
@@ -187,8 +188,6 @@ public class SearchingPage {
 
     private Runnable startSearchAsANewThread(final SearchingDto searchingDto) {
         return () -> {
-
-            final SearcherService patentScopePatentSearcherService = annotationConfigApplicationContext.getBean(SearcherService.class);
 
             try {
                 clearButtonAction();

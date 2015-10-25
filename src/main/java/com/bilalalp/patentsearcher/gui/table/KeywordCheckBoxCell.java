@@ -10,22 +10,22 @@ import javafx.scene.layout.StackPane;
 
 public class KeywordCheckBoxCell extends TableCell<KeywordInfoDto, Boolean> {
 
-    private final CheckBox deleteButton = new CheckBox();
-    private final StackPane paddedButton = new StackPane();
+    private final CheckBox checkBox = new CheckBox();
+    private final StackPane stackPane = new StackPane();
 
     public KeywordCheckBoxCell() {
-        paddedButton.setPadding(new Insets(3));
+        stackPane.setPadding(new Insets(3));
         HBox vBox = new HBox();
         vBox.setSpacing(10);
-        vBox.getChildren().addAll(deleteButton);
-        paddedButton.getChildren().add(vBox);
+        vBox.getChildren().addAll(checkBox);
+        stackPane.getChildren().add(vBox);
 
-        deleteButton.setOnAction(actionEvent -> {
+        checkBox.setOnAction(actionEvent -> {
             final Object item = getTableRow().getItem();
 
             if (item != null && item instanceof KeywordInfoDto) {
                 final KeywordInfoDto keywordInfoDto = (KeywordInfoDto) item;
-                keywordInfoDto.setSelected(deleteButton.isSelected());
+                keywordInfoDto.setSelected(checkBox.isSelected());
             }
         });
     }
@@ -35,7 +35,7 @@ public class KeywordCheckBoxCell extends TableCell<KeywordInfoDto, Boolean> {
         super.updateItem(item, empty);
         if (!empty) {
             setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-            setGraphic(paddedButton);
+            setGraphic(stackPane);
         } else {
             setGraphic(null);
         }

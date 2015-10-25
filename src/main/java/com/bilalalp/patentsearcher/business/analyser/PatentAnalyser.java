@@ -45,6 +45,7 @@ public class PatentAnalyser {
 
                 final List<String> analysedAbstractContentList = analyse(abstractContent);
                 final List<ParsedKeywordInfo> parsedKeywordInfoList = analysedAbstractContentList.stream()
+                        .filter(k -> k.length() < 200)
                         .map(k -> new ParsedKeywordInfo(k, ContentType.ABSTRACT, patentInfo))
                         .collect(Collectors.toList());
 
