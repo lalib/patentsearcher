@@ -8,13 +8,14 @@ import com.bilalalp.patentsearcher.dto.*;
 import com.bilalalp.patentsearcher.entity.ContentType;
 import com.bilalalp.patentsearcher.entity.KeywordInfo;
 import com.bilalalp.patentsearcher.entity.SiteInfo;
-import com.bilalalp.patentsearcher.entity.StopWordInfo;
 import com.bilalalp.patentsearcher.service.keywordinfo.KeywordInfoService;
 import com.bilalalp.patentsearcher.service.parsedkeywordinfo.ParsedKeywordInfoService;
 import com.bilalalp.patentsearcher.service.patentinfo.PatentInfoService;
 import com.bilalalp.patentsearcher.service.searchinfo.SearchInfoService;
 import com.bilalalp.patentsearcher.service.siteinfo.SiteInfoService;
 import com.bilalalp.patentsearcher.service.stopwordinfo.StopWordInfoService;
+import com.bilalalp.patentsearcher.util.GuiAlertUtil;
+import com.bilalalp.patentsearcher.util.GuiListConverterUtil;
 import com.bilalalp.patentsearcher.util.GuiUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -48,6 +49,8 @@ public class MainGui extends Application {
     private final ParserService parserService = annotationConfigApplicationContext.getBean(ParserService.class);
     private final PatentAnalyser patentAnalyser = annotationConfigApplicationContext.getBean(PatentAnalyser.class);
     private final ParsedKeywordInfoService parsedKeywordInfoService = annotationConfigApplicationContext.getBean(ParsedKeywordInfoService.class);
+    private final SiteInfoService siteInfoService = annotationConfigApplicationContext.getBean(SiteInfoService.class);
+    private final StopWordInfoService stopWordInfoService = annotationConfigApplicationContext.getBean(StopWordInfoService.class);
 
     private UIInfoDto uiInfoDto = new UIInfoDto();
     private ContentSearchDto contentSearchDto = new ContentSearchDto();
@@ -87,7 +90,7 @@ public class MainGui extends Application {
     private final TableView<SearchInfoDto> searchInfoDtoTableView = new TableView<>();
     private final TableView<SearchInfoDto> analyseInfoTableView = new TableView<>();
     private final TableView<SiteInfoDto> siteInfoTable = new TableView<>();
-    private final TableView<StopWordInfoDto> stopWordInfoDtoTableView = getStopWordTable();
+    private final TableView<StopWordInfoDto> stopWordInfoDtoTableView = GuiUtil.getStopWordTable();
 
     private final Button startButton = new Button("Start");
     private final Button stopButton = new Button("Stop");
@@ -175,28 +178,7 @@ public class MainGui extends Application {
 
         final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(() -> Platform.runLater(this::setActualValues), 1, 1, TimeUnit.SECONDS);
-
-        final TableColumn<SearchInfoDto, Long> idColumn = new TableColumn<>("ID");
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
-
-        final TableColumn<SearchInfoDto, String> dateColumn = new TableColumn<>("Search Date");
-        dateColumn.setCellValueFactory(new PropertyValueFactory<>("searchDate"));
-
-        final TableColumn<SearchInfoDto, String> stateColumn = new TableColumn<>("State");
-        stateColumn.setCellValueFactory(new PropertyValueFactory<>("state"));
-
-        final TableColumn<SearchInfoDto, Long> linkCountColumn = new TableColumn<>("Total Link");
-        linkCountColumn.setCellValueFactory(new PropertyValueFactory<>("linkCount"));
-
-        final TableColumn<SearchInfoDto, Long> totalTimeColumn = new TableColumn<>("Total Time");
-        totalTimeColumn.setCellValueFactory(new PropertyValueFactory<>("totalTime"));
-
-        final List<TableColumn<SearchInfoDto, ?>> keywordInfoDtoObservableList = new ArrayList<>();
-        keywordInfoDtoObservableList.add(idColumn);
-        keywordInfoDtoObservableList.add(dateColumn);
-        keywordInfoDtoObservableList.add(stateColumn);
-        keywordInfoDtoObservableList.add(linkCountColumn);
-        keywordInfoDtoObservableList.add(totalTimeColumn);
+        final List<TableColumn<SearchInfoDto, ?>> keywordInfoDtoObservableList = GuiUtil.getSearchInfoColumnList();
 
         searchInfoDtoTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         searchInfoDtoTableView.setMinWidth(600);
@@ -213,6 +195,7 @@ public class MainGui extends Application {
         tab2.setContent(hBox);
         return tab2;
     }
+
 
     private void fillSearchInfoTableForCrawlTab() {
         final List<SearchInfoDto> searchInfoDtoList = getSearchInfoDtos();
@@ -317,7 +300,7 @@ public class MainGui extends Application {
 
             if (tab1.isSelected()) {
                 loadSiteInfos();
-                table.setItems(getKeywordInfoObservableList(fillKeywordInfoTable()));
+                table.setItems(GuiListConverterUtil.getKeywordInfoObservableList(fillKeywordInfoTable()));
             }
         });
 
@@ -325,8 +308,8 @@ public class MainGui extends Application {
         tab.setText("Link Search");
 
         final BorderPane tab1BorderPane = new BorderPane();
-        table = getKeywordTable();
-        table.setItems(getKeywordInfoObservableList(fillKeywordInfoTable()));
+        table = GuiUtil.getKeywordTable();
+        table.setItems(GuiListConverterUtil.getKeywordInfoObservableList(fillKeywordInfoTable()));
         siteInfoDtoTableView = getSiteInfoTable();
 
         final GridPane gridPane = getCenterOfFirstTab();
@@ -345,80 +328,20 @@ public class MainGui extends Application {
         return tab;
     }
 
-    private TableView<KeywordInfoDto> getKeywordTable() {
-        final TableView<KeywordInfoDto> keywordInfoDtoTableView = new TableView<>();
-
-        keywordInfoDtoTableView.setMaxWidth(260);
-        TableColumn<KeywordInfoDto, String> keywordColumn = new TableColumn<>("Keyword");
-        TableColumn<KeywordInfoDto, Boolean> selectionColumn = new TableColumn<>();
-        keywordColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
-        keywordColumn.setMinWidth(200);
-
-        selectionColumn.setCellValueFactory(features -> new SimpleBooleanProperty(features.getValue() != null));
-        selectionColumn.setCellFactory(personBooleanTableColumn -> new KeywordCheckBoxCell());
-
-        final List<TableColumn<KeywordInfoDto, ?>> tableColumnList = new ArrayList<>();
-        tableColumnList.add(selectionColumn);
-        tableColumnList.add(keywordColumn);
-        keywordInfoDtoTableView.getColumns().addAll(tableColumnList);
-        return keywordInfoDtoTableView;
-    }
-
-    private TableView<StopWordInfoDto> getStopWordTable(){
-        final TableView<StopWordInfoDto> keywordInfoDtoTableView = new TableView<>();
-
-        keywordInfoDtoTableView.setMaxWidth(260);
-        TableColumn<StopWordInfoDto, String> keywordColumn = new TableColumn<>("Keyword");
-        TableColumn<StopWordInfoDto, Boolean> selectionColumn = new TableColumn<>();
-        keywordColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
-        keywordColumn.setMinWidth(200);
-
-        selectionColumn.setCellValueFactory(features -> new SimpleBooleanProperty(features.getValue() != null));
-        selectionColumn.setCellFactory(personBooleanTableColumn -> new StopWordCheckBoxCell());
-
-        final List<TableColumn<StopWordInfoDto, ?>> tableColumnList = new ArrayList<>();
-        tableColumnList.add(selectionColumn);
-        tableColumnList.add(keywordColumn);
-        keywordInfoDtoTableView.getColumns().addAll(tableColumnList);
-        return keywordInfoDtoTableView;
-    }
 
     private List<KeywordInfo> fillKeywordInfoTable() {
         final KeywordInfoService keywordInfoService = annotationConfigApplicationContext.getBean(KeywordInfoService.class);
         return keywordInfoService.findAll();
     }
 
-    private List<StopWordInfo> getAllStopWords(){
-        final StopWordInfoService stopWordInfoService = annotationConfigApplicationContext.getBean(StopWordInfoService.class);
-        return stopWordInfoService.findAll();
-    }
-
-    private ObservableList<KeywordInfoDto> getKeywordInfoObservableList(final List<KeywordInfo> keywordInfoList) {
-
-        final ObservableList<KeywordInfoDto> keywordInfoDtoObservableList = FXCollections.observableArrayList();
-        keywordInfoDtoObservableList.addAll(keywordInfoList.stream().map(keywordInfo -> new KeywordInfoDto(keywordInfo.getId(), keywordInfo.getKeyword())).collect(Collectors.toList()));
-        return keywordInfoDtoObservableList;
-    }
-
-    private ObservableList<StopWordInfoDto> getStopWordInfoObservableList(final List<StopWordInfo> stopWordInfoList){
-        final ObservableList<StopWordInfoDto> keywordInfoDtoObservableList = FXCollections.observableArrayList();
-        keywordInfoDtoObservableList.addAll(stopWordInfoList.stream().map(keywordInfo -> new StopWordInfoDto(keywordInfo.getId(), keywordInfo.getWord())).collect(Collectors.toList()));
-        return keywordInfoDtoObservableList;
-    }
-
-    private ObservableList<SiteInfoDto> getSiteInfoObservableList(final List<SiteInfo> keywordInfoList) {
-
-        final ObservableList<SiteInfoDto> keywordInfoDtoObservableList = FXCollections.observableArrayList();
-        keywordInfoDtoObservableList.addAll(keywordInfoList.stream().map(keywordInfo -> new SiteInfoDto(keywordInfo.getId(), keywordInfo.getSiteName(), keywordInfo.getSiteAddres())).collect(Collectors.toList()));
-        return keywordInfoDtoObservableList;
-    }
 
     public TableView<SiteInfoDto> getSiteInfoTable() {
 
         siteInfoTable.setMaxWidth(260);
 
-        TableColumn<SiteInfoDto, String> keywordColumn = new TableColumn<>("Site Name");
-        TableColumn<SiteInfoDto, Boolean> selectionColumn = new TableColumn<>();
+        final TableColumn<SiteInfoDto, String> keywordColumn = new TableColumn<>("Site Name");
+        final TableColumn<SiteInfoDto, Boolean> selectionColumn = new TableColumn<>();
+
         keywordColumn.setCellValueFactory(new PropertyValueFactory<>("siteName"));
         keywordColumn.setMinWidth(200);
 
@@ -433,9 +356,8 @@ public class MainGui extends Application {
     }
 
     private void loadSiteInfos() {
-        final SiteInfoService siteInfoService = annotationConfigApplicationContext.getBean(SiteInfoService.class);
         final List<SiteInfo> siteInfoList = siteInfoService.findAll();
-        siteInfoTable.setItems(getSiteInfoObservableList(siteInfoList));
+        siteInfoTable.setItems(GuiListConverterUtil.getSiteInfoObservableList(siteInfoList));
     }
 
     public GridPane getCenterOfFirstTab() {
@@ -594,7 +516,7 @@ public class MainGui extends Application {
 
             if (tab1.isSelected()) {
                 fillAnalyseInfoTable();
-                stopWordInfoDtoTableView.setItems(getStopWordInfoObservableList(getAllStopWords()));
+                stopWordInfoDtoTableView.setItems(GuiListConverterUtil.getStopWordInfoObservableList(stopWordInfoService.findAll()));
             }
         });
 
@@ -667,21 +589,9 @@ public class MainGui extends Application {
         hBox.setSpacing(10);
         hBox.setPadding(new Insets(25, 25, 25, 25));
 
-        final TableView<KeywordCountDto> keywordCountDtoTableView = new TableView<>();
+        final TableView<KeywordCountDto> keywordCountDtoTableView = GuiUtil.getKeywordCountTable();
 
-        final TableColumn<KeywordCountDto, Long> keywordColumn = new TableColumn<>("Keyword");
-        keywordColumn.setCellValueFactory(new PropertyValueFactory<>("keyword"));
-
-        final TableColumn<KeywordCountDto, String> countColumn = new TableColumn<>("Count");
-        countColumn.setCellValueFactory(new PropertyValueFactory<>("count"));
-
-        final List<TableColumn<KeywordCountDto, ?>> keywordInfoDtoObservableList = new ArrayList<>();
-        keywordInfoDtoObservableList.add(keywordColumn);
-        keywordInfoDtoObservableList.add(countColumn);
-
-        keywordCountDtoTableView.getColumns().addAll(keywordInfoDtoObservableList);
-
-        stopWordInfoDtoTableView.setItems(getStopWordInfoObservableList(getAllStopWords()));
+        stopWordInfoDtoTableView.setItems(GuiListConverterUtil.getStopWordInfoObservableList(stopWordInfoService.findAll()));
 
         final VBox vBox = new VBox();
         vBox.setSpacing(5);
@@ -696,30 +606,17 @@ public class MainGui extends Application {
                     .collect(Collectors.toList());
 
             if (selectedSearchInfoIdList.isEmpty()) {
-                final Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setHeaderText("Error");
-                alert.setContentText("SearchInfo must be selected.!");
-                alert.show();
+                GuiAlertUtil.siteInfoMustBeSelected().show();
                 return;
             }
 
             final ObservableList<StopWordInfoDto> keywordInfoDtoTableViewItems = stopWordInfoDtoTableView.getItems();
-
-            final List<String> selectedKeywordInfoDtoList = new ArrayList<>();
-
-            for(StopWordInfoDto stopWordInfoDto : keywordInfoDtoTableViewItems){
-                if(Boolean.TRUE.equals(stopWordInfoDto.getSelected())){
-                    selectedKeywordInfoDtoList.add(stopWordInfoDto.getText());
-                }
-            }
-
-        final List<ContentType> contentTypes = getSelectedContentTypes();
-
+            final List<String> selectedKeywordInfoDtoList = keywordInfoDtoTableViewItems.stream().filter(stopWordInfoDto -> Boolean.TRUE.equals(stopWordInfoDto.getSelected())).map(StopWordInfoDto::getText).collect(Collectors.toList());
+            final List<ContentType> contentTypes = getSelectedContentTypes();
             final List<KeywordCountDto> keywordCountDtoList = parsedKeywordInfoService.getKeywordCountDto(selectedSearchInfoIdList, selectedKeywordInfoDtoList, contentTypes);
-
             final ObservableList<KeywordCountDto> observableList = FXCollections.observableList(keywordCountDtoList);
             keywordCountDtoTableView.setItems(observableList);
+
         });
 
 
@@ -801,74 +698,6 @@ public class MainGui extends Application {
         gridPane.add(stateOfAnalysing, 5, 1);
         gridPane.add(analyseStartButton, 4, 2);
         return gridPane;
-    }
-
-    private class KeywordCheckBoxCell extends TableCell<KeywordInfoDto, Boolean> {
-        final CheckBox deleteButton = new CheckBox();
-
-        final StackPane paddedButton = new StackPane();
-
-        KeywordCheckBoxCell() {
-            paddedButton.setPadding(new Insets(3));
-            HBox vBox = new HBox();
-            vBox.setSpacing(10);
-            vBox.getChildren().addAll(deleteButton);
-            paddedButton.getChildren().add(vBox);
-
-            deleteButton.setOnAction(actionEvent -> {
-                final Object item = getTableRow().getItem();
-
-                if (item != null && item instanceof KeywordInfoDto) {
-                    final KeywordInfoDto keywordInfoDto = (KeywordInfoDto) item;
-                    keywordInfoDto.setSelected(deleteButton.isSelected());
-                }
-            });
-        }
-
-        @Override
-        protected void updateItem(final Boolean item, final boolean empty) {
-            super.updateItem(item, empty);
-            if (!empty) {
-                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-                setGraphic(paddedButton);
-            } else {
-                setGraphic(null);
-            }
-        }
-    }
-
-    private class StopWordCheckBoxCell extends TableCell<StopWordInfoDto,Boolean>{
-        final CheckBox deleteButton = new CheckBox();
-
-        final StackPane paddedButton = new StackPane();
-
-        StopWordCheckBoxCell() {
-            paddedButton.setPadding(new Insets(3));
-            HBox vBox = new HBox();
-            vBox.setSpacing(10);
-            vBox.getChildren().addAll(deleteButton);
-            paddedButton.getChildren().add(vBox);
-
-            deleteButton.setOnAction(actionEvent -> {
-                final Object item = getTableRow().getItem();
-
-                if (item != null && item instanceof StopWordInfoDto) {
-                    final StopWordInfoDto keywordInfoDto = (StopWordInfoDto) item;
-                    keywordInfoDto.setSelected(deleteButton.isSelected());
-                }
-            });
-        }
-
-        @Override
-        protected void updateItem(final Boolean item, final boolean empty) {
-            super.updateItem(item, empty);
-            if (!empty) {
-                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-                setGraphic(paddedButton);
-            } else {
-                setGraphic(null);
-            }
-        }
     }
 
     private class SearchInfoDtoCheckBoxCell extends TableCell<SearchInfoDto, Boolean> {

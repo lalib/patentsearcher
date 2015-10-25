@@ -1,7 +1,6 @@
 package com.bilalalp.patentsearcher.entity;
 
 import javax.annotation.Generated;
-import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
 
@@ -13,7 +12,6 @@ public abstract class PatentInfo_ extends com.bilalalp.patentsearcher.entity.Abs
 	public static volatile SingularAttribute<PatentInfo, SearchInfo> searchInfo;
 	public static volatile SingularAttribute<PatentInfo, String> patentNumber;
 	public static volatile SingularAttribute<PatentInfo, String> abstractContent;
-	public static volatile ListAttribute<PatentInfo, ParsedKeywordInfo> abstractParsedKeywordInfoList;
 	public static volatile SingularAttribute<PatentInfo, Boolean> parsed;
 	public static volatile SingularAttribute<PatentInfo, Long> id;
 	public static volatile SingularAttribute<PatentInfo, String> patentTitle;
