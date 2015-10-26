@@ -8,7 +8,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-public class JSoupUtil {
+public final class JSoupUtil {
 
     public static Element getBody(String patentLink, WaitingEnum waitingEnum, CrawlingDto crawlingDto) {
 
@@ -32,16 +32,6 @@ public class JSoupUtil {
         }
 
         return null;
-    }
-
-    public static void sleep(WaitingEnum waitingEnum) {
-
-        try {
-            Thread.sleep(waitingEnum.getTime());
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void sleep(UIInfoDto uiInfoDto, WaitingEnum waitingEnum) {

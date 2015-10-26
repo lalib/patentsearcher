@@ -3,7 +3,7 @@ package com.bilalalp.patentsearcher.util;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-public class TypeUtil {
+public final class TypeUtil {
 
     private TypeUtil() {
         //Util Class
